@@ -1,0 +1,3 @@
+app:
+  whisper:
+    base-url: http://localhost:14444
