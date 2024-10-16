@@ -1,3 +1,5 @@
 app:
-  whisper:
-    base-url: http://localhost:14444
+  weather:
+    base-url: https://api.openweathermap.org/data/3.0/onecall
+  geocoding:
+    base-url: https://nominatim.openstreetmap.org/search

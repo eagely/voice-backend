@@ -22,6 +22,15 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+	implementation("com.aallam.openai:openai-client:3.8.2")
+	implementation("io.ktor:ktor-client-apache5:2.3.12")
+	implementation("org.slf4j:slf4j-simple")
+}
+
+configurations.all {
+	exclude(module = "slf4j-simple")
 }
 
 kotlin {

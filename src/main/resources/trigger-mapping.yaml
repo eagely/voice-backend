@@ -1,0 +1,12 @@
+#triggers:
+#  - command: "weather"
+#    detection:
+#      type: contains
+#  - command: "exec"
+#    detection:
+#      type: regex
+#      pattern: "\b(run|execute|start|launch|open)\s+\w+"
+#
+#
+#
+#
