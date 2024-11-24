@@ -1,5 +1,7 @@
 app:
+  units:
+    isMetric: false
   weather:
-    base-url: https://api.openweathermap.org/data/3.0/onecall
+    baseUrl: https://api.openweathermap.org/data/3.0/onecall
   geocoding:
-    base-url: https://nominatim.openstreetmap.org/search
+    baseUrl: https://nominatim.openstreetmap.org/search

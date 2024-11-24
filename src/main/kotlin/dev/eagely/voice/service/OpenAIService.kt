@@ -17,15 +17,12 @@ class OpenAIService {
 
     fun getCompletion(content: String): Mono<ChatCompletion> {
         val chatCompletionRequest = ChatCompletionRequest(
-            model = ModelId("gpt-4o-mini"),
-            messages = listOf(
+            model = ModelId("gpt-4o-mini"), messages = listOf(
                 ChatMessage(
                     role = ChatRole.System,
                     content = "You are a helpful voice assistant, reply naturally, without describing what task you will perform."
-                ),
-                ChatMessage(
-                    role = ChatRole.User,
-                    content = content
+                ), ChatMessage(
+                    role = ChatRole.User, content = content
                 )
             )
         )
