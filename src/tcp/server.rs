@@ -1,6 +1,5 @@
+use crate::handlers::{ProcessingHandler, RecordingHandler, TranscriptionHandler};
 use std::sync::Arc;
-
-use crate::handlers::traits::{ProcessingHandler, RecordingHandler, TranscriptionHandler};
 
 pub struct TcpServer {
     port: u16,
