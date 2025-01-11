@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 tokio = "1.43.0"
+async-trait = "0.1.85"
+thiserror = "2.0.11"
