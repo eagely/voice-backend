@@ -3,7 +3,7 @@ use crate::error::Result;
 use async_trait::async_trait;
 
 pub struct LocalProcessor {
-    model: String,
+    pub model: String,
 }
 
 #[async_trait]
