@@ -1,5 +1,8 @@
+use tokio::time::sleep;
+
+use crate::error::Result;
 use crate::handlers::{ProcessingHandler, RecordingHandler, TranscriptionHandler};
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 pub struct TcpServer {
     port: u16,
@@ -21,5 +24,11 @@ impl TcpServer {
             recognizer,
             processor,
         }
+    }
+
+    pub async fn run(&self) -> Result<Vec<u8>> {
+        self.recorder.start()?;
+        sleep(Duration::from_secs(5)).await;
+        self.recorder.stop()
     }
 }
