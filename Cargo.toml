@@ -5,8 +5,10 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.85"
+bytes = "1.9.0"
 cpal = "0.15.3"
 hound = "3.5.1"
+thiserror = "2.0.11"
 tokio = { version = "1.43.0", features = [
     "fs",
     "io-util",
@@ -15,4 +17,4 @@ tokio = { version = "1.43.0", features = [
     "time",
     "sync",
 ] }
-thiserror = "2.0.11"
+whisper-rs = "0.13.2"

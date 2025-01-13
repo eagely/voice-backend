@@ -1,23 +1,28 @@
 use thiserror::Error;
+use whisper_rs::WhisperError;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("IO error during recording: {0}")]
-    IOError(#[from] tokio::io::Error),
+    #[error("Audio Processing Error: {0}")]
+    AudioProcessing(#[from] hound::Error),
+    #[error("Codec error: {0}")]
+    AudioCodec(String),
     #[error("Devices Error: {0}")]
-    DevicesError(#[from] cpal::DevicesError),
+    AudioInputDevices(#[from] cpal::DevicesError),
+    #[error("IO error during recording: {0}")]
+    Io(#[from] tokio::io::Error),
     #[error("No input device.")]
-    NoDefaultInputDevice,
+    NoDefaultAudioInputDevice,
     #[error("Input device with the name {0} not found.")]
-    InputDeviceNotFound(String),
+    AudioInputDeviceNotFound(String),
     #[error("Failed to lock: {0}")]
-    LockError(String),
+    Lock(String),
     #[error("Failed to play stream: {0}")]
-    PlayStreamError(#[from] cpal::PlayStreamError),
+    PlayAudioStream(#[from] cpal::PlayStreamError),
     #[error("Failed to pause stream: {0}")]
-    PauseStreamError(#[from] cpal::PauseStreamError),
+    PauseAudioStream(#[from] cpal::PauseStreamError),
     #[error("Request error: {0}")]
-    StreamBuildError(#[from] cpal::BuildStreamError),
-    #[error("Failed to create WAV writer: {0}")]
-    WavWriterError(#[from] hound::Error),
+    AudioStreamBuild(#[from] cpal::BuildStreamError),
+    #[error("Whisper error: {0}")]
+    WhisperError(#[from] WhisperError),
 }

@@ -1,5 +1,6 @@
 use super::handler::RecordingHandler;
 use crate::error::{Error, Result};
+use bytes::Bytes;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Device;
 use hound::{WavSpec, WavWriter};
@@ -22,7 +23,7 @@ impl LocalRecorder {
         let device = host
             .input_devices()?
             .find(|d| d.name().map(|n| n == device_name).unwrap_or(false))
-            .ok_or(Error::InputDeviceNotFound(device_name))?;
+            .ok_or(Error::AudioInputDeviceNotFound(device_name))?;
 
         Self::set_up_recorder(device)
     }
@@ -31,7 +32,7 @@ impl LocalRecorder {
         let host = cpal::default_host();
         let device = host
             .default_input_device()
-            .ok_or(Error::NoDefaultInputDevice)?;
+            .ok_or(Error::NoDefaultAudioInputDevice)?;
 
         Self::set_up_recorder(device)
     }
@@ -67,13 +68,13 @@ impl RecordingHandler for LocalRecorder {
     fn start(&self) -> Result<()> {
         self.buffer
             .lock()
-            .map_err(|_| Error::LockError("recording buffer".to_owned()))?
+            .map_err(|_| Error::Lock("recording buffer".to_owned()))?
             .clear();
         self.stream.play()?;
         Ok(())
     }
 
-    fn stop(&self) -> Result<Vec<u8>> {
+    fn stop(&self) -> Result<Bytes> {
         self.stream.pause()?;
         let spec = WavSpec {
             channels: CHANNELS,
@@ -85,7 +86,7 @@ impl RecordingHandler for LocalRecorder {
         let recorded_data = self
             .buffer
             .lock()
-            .map_err(|_| Error::LockError("recording buffer".to_owned()))?
+            .map_err(|_| Error::Lock("recording buffer".to_owned()))?
             .clone();
         let mut cursor = Cursor::new(Vec::new());
         {
@@ -96,6 +97,6 @@ impl RecordingHandler for LocalRecorder {
             writer.finalize()?;
         }
 
-        Ok(cursor.into_inner())
+        Ok(Bytes::from(cursor.into_inner()))
     }
 }
