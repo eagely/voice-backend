@@ -11,17 +11,16 @@ use tcp::server::TcpServer;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let recorder = Arc::new(LocalRecorder::new("pipewire")?);
+    let recorder = Box::new(LocalRecorder::new("pipewire")?);
 
-    let recognizer = Arc::new(LocalWhisperTranscriber::new("base")?);
+    let recognizer = Arc::new(LocalWhisperTranscriber::new("base.bin")?);
 
     let processor = Arc::new(LocalProcessor {
         model: "gpt2".to_string(),
     });
 
-    let server = TcpServer::new(8080, recorder, recognizer, processor);
-
-    let result = server.run().await?;
-    println!("{}", result);
-    Ok(())
+    let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, processor)?;
+    loop {
+        server.listen().await?;
+    }
 }
