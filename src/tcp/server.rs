@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::handlers::{ProcessingHandler, RecordingHandler, TranscriptionHandler};
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
@@ -41,7 +41,7 @@ impl TcpServer {
         let mut recording_active = false;
 
         while reader.read_line(&mut line)? > 0 {
-            let response = match line.trim() {
+            let transcription = match line.trim() {
                 "START_RECORDING" => {
                     self.recorder.start()?;
                     recording_active = true;
@@ -56,7 +56,14 @@ impl TcpServer {
                 _ => "Unknown command.".to_string(),
             };
 
-            writeln!(writer, "{}", response)?;
+            let result = match self.processor.process(&transcription).await {
+                Ok(res) => res,
+                Err(e) => format!("Error processing transcription: {}", e),
+            };
+
+            if let Err(e) = writeln!(writer, "{}", result) {
+                return Err(Error::ClientWriteError(format!("Failed to write to client: {}", e)));
+            }
             line.clear();
         }
 

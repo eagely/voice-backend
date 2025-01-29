@@ -8,7 +8,7 @@ pub struct LocalProcessor {
 
 #[async_trait]
 impl ProcessingHandler for LocalProcessor {
-    async fn respond(&self, input: &str) -> Result<String> {
+    async fn process(&self, input: &str) -> Result<String> {
         todo!()
     }
 }
