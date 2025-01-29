@@ -1,10 +1,14 @@
+mod api;
 mod error;
 mod handlers;
+mod model;
 mod tcp;
 
 use crate::error::Result;
+use api::{geocode::nominatim_client::NominatimClient, weather::OpenWeatherMapClient};
 use handlers::{
-    processing::LocalProcessor, recording::LocalRecorder, transcription::LocalWhisperTranscriber,
+    processing::LocalPatternMatcher, recording::LocalRecorder,
+    transcription::LocalWhisperTranscriber,
 };
 use std::sync::Arc;
 use tcp::server::TcpServer;
@@ -15,9 +19,14 @@ async fn main() -> Result<()> {
 
     let recognizer = Arc::new(LocalWhisperTranscriber::new("base.bin")?);
 
-    let processor = Arc::new(LocalProcessor {
-        model: "gpt2".to_string(),
-    });
+    let weather_client = Arc::new(OpenWeatherMapClient::new(
+        std::env::var("OPENWEATHERMAP_API_KEY")?,
+        "https://api.openweathermap.org/data/3.0/onecall",
+    )?);
+    let geocoding_client = Arc::new(NominatimClient::new(
+        "https://nominatim.openstreetmap.org/search",
+    )?);
+    let processor = Arc::new(LocalPatternMatcher::new(weather_client, geocoding_client));
 
     let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, processor)?;
     loop {

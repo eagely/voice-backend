@@ -28,7 +28,7 @@ impl TranscriptionHandler for LocalWhisperTranscriber {
 
         let spec = reader.spec();
         if spec.channels != 1 || spec.sample_rate != 16000 {
-            return Err(Error::AudioCodec("Wav must be 16".to_owned()));
+            return Err(Error::AudioCodec("WAV file must be mono and have a sample rate of 16000 Hz".to_owned()));
         }
 
         let samples: Vec<f32> = reader

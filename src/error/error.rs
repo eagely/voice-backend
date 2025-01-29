@@ -1,5 +1,4 @@
 use thiserror::Error;
-use whisper_rs::WhisperError;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -9,8 +8,16 @@ pub enum Error {
     AudioCodec(String),
     #[error("Devices Error: {0}")]
     AudioInputDevices(#[from] cpal::DevicesError),
+    #[error("Request error: {0}")]
+    AudioStreamBuild(#[from] cpal::BuildStreamError),
+    #[error("Json deserialization error: {0}")]
+    JsonDeserializationError(#[from] serde_json::Error),
+    #[error("Invalid header value: {0}")]
+    InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
     #[error("IO error during recording: {0}")]
-    Io(#[from] tokio::io::Error),
+    IoError(#[from] tokio::io::Error),
+    #[error("Not a valid location: {0}")]
+    GeocodingError(String),
     #[error("No input device.")]
     NoDefaultAudioInputDevice,
     #[error("Input device with the name {0} not found.")]
@@ -21,8 +28,14 @@ pub enum Error {
     PlayAudioStream(#[from] cpal::PlayStreamError),
     #[error("Failed to pause stream: {0}")]
     PauseAudioStream(#[from] cpal::PauseStreamError),
-    #[error("Request error: {0}")]
-    AudioStreamBuild(#[from] cpal::BuildStreamError),
+    #[error("Request failed: {0}")]
+    RequestError(#[from] reqwest::Error),
+    #[error("Url parse error: {0}")]
+    UrlParseError(#[from] url::ParseError),
+    #[error("Environment variable error: {0}")]
+    EnvVarError(#[from] std::env::VarError),
     #[error("Whisper error: {0}")]
-    WhisperError(#[from] WhisperError),
+    WhisperError(#[from] whisper_rs::WhisperError),
+    #[error("Failed to write to client: {0}")]
+    ClientWriteError(String),
 }
