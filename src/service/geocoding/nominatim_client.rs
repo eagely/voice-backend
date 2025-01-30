@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use reqwest::{header, Client};
 use url::Url;
 
-use super::geocoding_client::GeocodingClient;
+use super::geocoding_service::GeocodingService;
 
 pub struct NominatimClient {
     client: Client,
@@ -25,7 +25,7 @@ impl NominatimClient {
 }
 
 #[async_trait]
-impl GeocodingClient for NominatimClient {
+impl GeocodingService for NominatimClient {
     async fn request(&self, address: &str) -> Result<GeocodeResponse> {
         let mut url = self.base_url.clone();
         url.query_pairs_mut()

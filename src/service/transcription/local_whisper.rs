@@ -1,6 +1,6 @@
 use std::{io::Cursor, sync::Arc};
 
-use super::handler::TranscriptionHandler;
+use super::transcription_service::TranscriptionService;
 use crate::error::{Error, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
@@ -21,7 +21,7 @@ impl LocalWhisperTranscriber {
 }
 
 #[async_trait]
-impl TranscriptionHandler for LocalWhisperTranscriber {
+impl TranscriptionService for LocalWhisperTranscriber {
     async fn transcribe(&self, audio: &Bytes) -> Result<String> {
         let cursor = Cursor::new(audio);
         let mut reader = WavReader::new(cursor)?;

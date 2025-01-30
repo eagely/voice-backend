@@ -1,4 +1,4 @@
-use super::handler::ProcessingHandler;
+use super::processing_service::ProcessingService;
 use crate::error::Result;
 use async_trait::async_trait;
 
@@ -7,7 +7,7 @@ pub struct LocalProcessor {
 }
 
 #[async_trait]
-impl ProcessingHandler for LocalProcessor {
+impl ProcessingService for LocalProcessor {
     async fn process(&self, input: &str) -> Result<String> {
         todo!()
     }
