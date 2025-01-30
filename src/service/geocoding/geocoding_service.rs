@@ -3,6 +3,6 @@ use crate::error::Result;
 use crate::model::geocode::GeocodeResponse;
 
 #[async_trait]
-pub trait GeocodingClient: Send + Sync {
+pub trait GeocodingService: Send + Sync {
     async fn request(&self, address: &str) -> Result<GeocodeResponse>;
 }

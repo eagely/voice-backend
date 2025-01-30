@@ -1,4 +1,4 @@
-use super::weather_client::WeatherClient;
+use super::weather_service::WeatherService;
 use crate::{
     error::Result,
     model::{geocode::GeocodeResponse, weather::WeatherResponse},
@@ -23,7 +23,7 @@ impl OpenWeatherMapClient {
 }
 
 #[async_trait]
-impl WeatherClient for OpenWeatherMapClient {
+impl WeatherService for OpenWeatherMapClient {
     async fn request(&self, geocode: GeocodeResponse) -> Result<String> {
         let mut url = self.base_url.clone();
         url.set_path("data/2.5/weather");

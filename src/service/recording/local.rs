@@ -1,4 +1,4 @@
-use super::handler::RecordingHandler;
+use super::recording_service::RecordingService;
 use crate::error::{Error, Result};
 use bytes::Bytes;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -64,7 +64,7 @@ impl LocalRecorder {
     }
 }
 
-impl RecordingHandler for LocalRecorder {
+impl RecordingService for LocalRecorder {
     fn start(&self) -> Result<()> {
         self.buffer
             .lock()

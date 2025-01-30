@@ -1,22 +1,22 @@
 use crate::error::{Error, Result};
-use crate::handlers::{ProcessingHandler, RecordingHandler, TranscriptionHandler};
+use crate::service::{ProcessingService, RecordingService, TranscriptionService};
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 
 pub struct TcpServer {
     listener: TcpListener,
-    recorder: Box<dyn RecordingHandler>,
-    transcriber: Arc<dyn TranscriptionHandler + Send + Sync>,
-    processor: Arc<dyn ProcessingHandler + Send + Sync>,
+    recorder: Box<dyn RecordingService>,
+    transcriber: Arc<dyn TranscriptionService + Send + Sync>,
+    processor: Arc<dyn ProcessingService + Send + Sync>,
 }
 
 impl TcpServer {
     pub fn new(
         addr: &str,
-        recorder: Box<dyn RecordingHandler>,
-        transcriber: Arc<dyn TranscriptionHandler + Send + Sync>,
-        processor: Arc<dyn ProcessingHandler + Send + Sync>,
+        recorder: Box<dyn RecordingService>,
+        transcriber: Arc<dyn TranscriptionService + Send + Sync>,
+        processor: Arc<dyn ProcessingService + Send + Sync>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr)?;
 

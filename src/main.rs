@@ -1,14 +1,11 @@
-mod api;
 mod error;
-mod handlers;
+mod service;
 mod model;
 mod tcp;
 
 use crate::error::Result;
-use api::{geocode::nominatim_client::NominatimClient, weather::OpenWeatherMapClient};
-use handlers::{
-    processing::LocalPatternMatcher, recording::LocalRecorder,
-    transcription::LocalWhisperTranscriber,
+use service::{
+    geocoding::nominatim_client::NominatimClient, processing::LocalPatternMatcher, recording::LocalRecorder, transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient
 };
 use std::sync::Arc;
 use tcp::server::TcpServer;
