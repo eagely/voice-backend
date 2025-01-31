@@ -15,7 +15,7 @@ pub struct OpenWeatherMapClient {
 impl OpenWeatherMapClient {
     pub fn new(api_key: impl Into<String>, base_url: impl Into<String>) -> Result<Self> {
         Ok(Self {
-            client: Client::new(),
+            client: Client::builder().build()?,
             api_key: api_key.into(),
             base_url: Url::parse(&base_url.into())?,
         })

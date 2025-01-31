@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("API error: {0}")]
+    ApiError(String),
     #[error("Audio Processing Error: {0}")]
     AudioProcessing(#[from] hound::Error),
     #[error("Codec error: {0}")]
