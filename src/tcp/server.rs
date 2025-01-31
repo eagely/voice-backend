@@ -1,5 +1,7 @@
 use crate::error::{Error, Result};
-use crate::service::{ProcessingService, RecordingService, TranscriptionService};
+use crate::service::{
+    processing::ProcessingService, recording::RecordingService, transcription::TranscriptionService,
+};
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
@@ -62,7 +64,10 @@ impl TcpServer {
             };
 
             if let Err(e) = writeln!(writer, "{}", result) {
-                return Err(Error::ClientWriteError(format!("Failed to write to client: {}", e)));
+                return Err(Error::ClientWriteError(format!(
+                    "Failed to write to client: {}",
+                    e
+                )));
             }
             line.clear();
         }

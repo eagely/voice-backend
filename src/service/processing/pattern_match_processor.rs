@@ -5,12 +5,12 @@ use crate::service::weather::WeatherService;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-pub struct LocalPatternMatcher {
+pub struct PatternMatchProcessor {
     weather_client: Arc<dyn WeatherService>,
     geocoding_client: Arc<dyn GeocodingService>,
 }
 
-impl LocalPatternMatcher {
+impl PatternMatchProcessor {
     pub fn new(
         weather_client: Arc<dyn WeatherService>,
         geocoding_client: Arc<dyn GeocodingService>,
@@ -31,7 +31,7 @@ impl LocalPatternMatcher {
 }
 
 #[async_trait]
-impl ProcessingService for LocalPatternMatcher {
+impl ProcessingService for PatternMatchProcessor {
     async fn process(&self, input: &str) -> Result<String> {
         Ok(match input.to_lowercase() {
             x if x.contains("weather") || x.contains("whether") => {
