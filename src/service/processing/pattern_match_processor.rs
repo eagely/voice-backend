@@ -1,23 +1,27 @@
-use super::processing_service::ProcessingService;
+use super::ProcessingService;
 use crate::error::Result;
 use crate::service::geocoding::GeocodingService;
+use crate::service::llm::LlmService;
 use crate::service::weather::WeatherService;
 use async_trait::async_trait;
 use std::sync::Arc;
 
 pub struct PatternMatchProcessor {
-    weather_client: Arc<dyn WeatherService>,
-    geocoding_client: Arc<dyn GeocodingService>,
+    weather_service: Arc<dyn WeatherService>,
+    geocoding_service: Arc<dyn GeocodingService>,
+    llm_service: Arc<dyn LlmService>,
 }
 
 impl PatternMatchProcessor {
     pub fn new(
-        weather_client: Arc<dyn WeatherService>,
-        geocoding_client: Arc<dyn GeocodingService>,
+        weather_service: Arc<dyn WeatherService>,
+        geocoding_service: Arc<dyn GeocodingService>,
+        llm_service: Arc<dyn LlmService>,
     ) -> Self {
         Self {
-            weather_client,
-            geocoding_client,
+            weather_service,
+            geocoding_service,
+            llm_service,
         }
     }
 
@@ -36,15 +40,18 @@ impl ProcessingService for PatternMatchProcessor {
         Ok(match input.to_lowercase() {
             x if x.contains("weather") || x.contains("whether") => {
                 let coordinate = self
-                    .geocoding_client
+                    .geocoding_service
                     .request(&Self::remove(
                         x,
                         &["weather in", "weather", "whether in", "whether"],
                     ))
                     .await?;
-                self.weather_client.request(coordinate).await?
+                self.weather_service.request(coordinate).await?
             }
-            _ => input.to_owned(),
+            _ => {
+                let res = self.llm_service.request(input).await?;
+                res
+            },
         })
     }
 }

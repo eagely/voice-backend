@@ -43,7 +43,7 @@ impl TcpServer {
         let mut recording_active = false;
 
         while reader.read_line(&mut line)? > 0 {
-            let transcription = match line.trim() {
+            let result = match line.trim() {
                 "START_RECORDING" => {
                     self.recorder.start()?;
                     recording_active = true;
@@ -52,15 +52,14 @@ impl TcpServer {
                 "STOP_RECORDING" if recording_active => {
                     let audio = self.recorder.stop()?;
                     recording_active = false;
-                    self.transcriber.transcribe(&audio).await?
+                    let transcription = self.transcriber.transcribe(&audio).await?;
+                    match self.processor.process(&transcription).await {
+                        Ok(res) => res,
+                        Err(e) => format!("Error processing transcription: {}", e),
+                    }
                 }
                 "STOP_RECORDING" => "No recording in progress.".to_string(),
                 _ => "Unknown command.".to_string(),
-            };
-
-            let result = match self.processor.process(&transcription).await {
-                Ok(res) => res,
-                Err(e) => format!("Error processing transcription: {}", e),
             };
 
             if let Err(e) = writeln!(writer, "{}", result) {
