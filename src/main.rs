@@ -5,7 +5,7 @@ mod tcp;
 
 use crate::error::Result;
 use service::{
-    geocoding::nominatim_client::NominatimClient, processing::LocalPatternMatcher, recording::LocalRecorder, transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient
+    geocoding::NominatimClient, processing::PatternMatchProcessor, recording::LocalRecorder, transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient
 };
 use std::sync::Arc;
 use tcp::server::TcpServer;
@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     let geocoding_client = Arc::new(NominatimClient::new(
         "https://nominatim.openstreetmap.org/search",
     )?);
-    let processor = Arc::new(LocalPatternMatcher::new(weather_client, geocoding_client));
+    let processor = Arc::new(PatternMatchProcessor::new(weather_client, geocoding_client));
 
     let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, processor)?;
     loop {
