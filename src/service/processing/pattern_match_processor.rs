@@ -4,7 +4,8 @@ use crate::service::geocoding::GeocodingService;
 use crate::service::llm::LlmService;
 use crate::service::weather::WeatherService;
 use async_trait::async_trait;
-use std::sync::Arc;
+use std::{pin::Pin, sync::Arc};
+use tokio_stream::{once, Stream};
 
 pub struct PatternMatchProcessor {
     weather_service: Arc<dyn WeatherService>,
@@ -36,22 +37,26 @@ impl PatternMatchProcessor {
 
 #[async_trait]
 impl ProcessingService for PatternMatchProcessor {
-    async fn process(&self, input: &str) -> Result<String> {
-        Ok(match input.to_lowercase() {
+    async fn process(
+        &self,
+        input: &str,
+    ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
+        let input_lower = input.to_lowercase();
+
+        let stream = match input_lower.as_str() {
             x if x.contains("weather") || x.contains("whether") => {
-                let coordinate = self
-                    .geocoding_service
-                    .request(&Self::remove(
-                        x,
-                        &["weather in", "weather", "whether in", "whether"],
-                    ))
-                    .await?;
-                self.weather_service.request(coordinate).await?
+                let location = Self::remove(
+                    x.to_string(),
+                    &["weather in", "weather", "whether in", "whether"],
+                );
+                let coordinates = self.geocoding_service.request(&location).await?;
+                let weather_info = self.weather_service.request(coordinates).await?;
+
+                Box::pin(once(Ok(weather_info)))
             }
-            _ => {
-                let res = self.llm_service.request(input).await?;
-                res
-            },
-        })
+            _ => self.llm_service.request(input).await?,
+        };
+
+        Ok(stream)
     }
 }
