@@ -4,7 +4,9 @@ use crate::service::{
 };
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
+use std::pin::Pin;
 use std::sync::Arc;
+use tokio_stream::StreamExt; // to use stream.next().await
 
 pub struct TcpServer {
     listener: TcpListener,
@@ -43,30 +45,32 @@ impl TcpServer {
         let mut recording_active = false;
 
         while reader.read_line(&mut line)? > 0 {
-            let result = match line.trim() {
-                "START_RECORDING" => {
-                    self.recorder.start()?;
-                    recording_active = true;
-                    "Recording started.".to_string()
-                }
-                "STOP_RECORDING" if recording_active => {
-                    let audio = self.recorder.stop()?;
-                    recording_active = false;
-                    let transcription = self.transcriber.transcribe(&audio).await?;
-                    match self.processor.process(&transcription).await {
-                        Ok(res) => res,
-                        Err(e) => format!("Error processing transcription: {}", e),
+            let trimmed = line.trim();
+            if trimmed == "START_RECORDING" {
+                self.recorder.start()?;
+                recording_active = true;
+                writeln!(writer, "Recording started.")?;
+            } else if trimmed == "STOP_RECORDING" && recording_active {
+                let audio = self.recorder.stop()?;
+                recording_active = false;
+                let transcription = self.transcriber.transcribe(&audio).await?;
+                match self.processor.process(&transcription).await {
+                    Ok(mut stream) => {
+                        while let Some(item) = stream.next().await {
+                            let output = item?;
+                            writeln!(writer, "{}", output)?;
+                            writer.flush()?;
+                        }
+                    }
+                    Err(e) => {
+                        writeln!(writer, "Error processing transcription: {}", e)?;
+                        writer.flush()?;
                     }
                 }
-                "STOP_RECORDING" => "No recording in progress.".to_string(),
-                _ => "Unknown command.".to_string(),
-            };
-
-            if let Err(e) = writeln!(writer, "{}", result) {
-                return Err(Error::ClientWriteError(format!(
-                    "Failed to write to client: {}",
-                    e
-                )));
+            } else if trimmed == "STOP_RECORDING" {
+                writeln!(writer, "No recording in progress.")?;
+            } else {
+                writeln!(writer, "Unknown command.")?;
             }
             line.clear();
         }

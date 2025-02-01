@@ -22,13 +22,16 @@ async fn main() -> Result<()> {
         std::env::var("OPENWEATHERMAP_API_KEY")?,
         "https://api.openweathermap.org/data/3.0/onecall",
     )?);
+    
     let geocoding_client = Arc::new(NominatimClient::new(
         "https://nominatim.openstreetmap.org/search",
     )?);
+    
     let ollama_client = Arc::new(OllamaClient::new(
         "deepseek-r1:7b",
         "http://localhost:11434",
     )?);
+    
     let processor = Arc::new(PatternMatchProcessor::new(
         weather_client,
         geocoding_client,
