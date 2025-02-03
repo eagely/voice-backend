@@ -1,19 +1,20 @@
-use super::ProcessingService;
-use crate::error::Result;
+use super::ParsingService;
+use crate::model::action::{Entity, Intent};
 use crate::service::geocoding::GeocodingService;
 use crate::service::llm::LlmService;
 use crate::service::weather::WeatherService;
+use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
-use std::{pin::Pin, sync::Arc};
-use tokio_stream::{once, Stream};
+use std::collections::HashMap;
+use std::sync::Arc;
 
-pub struct PatternMatchProcessor {
+pub struct PatternMatchParser {
     weather_service: Arc<dyn WeatherService>,
     geocoding_service: Arc<dyn GeocodingService>,
     llm_service: Arc<dyn LlmService>,
 }
 
-impl PatternMatchProcessor {
+impl PatternMatchParser {
     pub fn new(
         weather_service: Arc<dyn WeatherService>,
         geocoding_service: Arc<dyn GeocodingService>,
@@ -36,27 +37,33 @@ impl PatternMatchProcessor {
 }
 
 #[async_trait]
-impl ProcessingService for PatternMatchProcessor {
-    async fn process(
-        &self,
-        input: &str,
-    ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
+impl ParsingService for PatternMatchParser {
+    async fn parse(&self, input: &str) -> Result<Option<Action>> {
         let input_lower = input.to_lowercase();
 
-        let stream = match input_lower.as_str() {
+        match input_lower.as_str() {
             x if x.contains("weather") || x.contains("whether") => {
                 let location = Self::remove(
                     x.to_string(),
                     &["weather in", "weather", "whether in", "whether"],
                 );
-                let coordinates = self.geocoding_service.request(&location).await?;
-                let weather_info = self.weather_service.request(coordinates).await?;
-
-                Box::pin(once(Ok(weather_info)))
+                let mut entities = HashMap::new();
+                entities.insert(
+                    "location".to_owned(),
+                    Entity {
+                        name: location,
+                        confidence: 100f32,
+                    },
+                );
+                Ok(Some(Action {
+                    intent: Intent {
+                        name: "weather".to_owned(),
+                        confidence: 100f32,
+                    },
+                    entities,
+                }))
             }
-            _ => self.llm_service.request(input).await?,
-        };
-
-        Ok(stream)
+            _ => Ok(None),
+        }
     }
 }

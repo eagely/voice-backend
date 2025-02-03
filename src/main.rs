@@ -5,9 +5,7 @@ mod tcp;
 
 use crate::error::Result;
 use service::{
-    geocoding::NominatimClient, llm::OllamaClient, processing::PatternMatchProcessor,
-    recording::LocalRecorder, transcription::LocalWhisperTranscriber,
-    weather::OpenWeatherMapClient,
+    geocoding::NominatimClient, llm::OllamaClient, parsing::PatternMatchParser, recording::LocalRecorder, runtime::local_sync_runtime::LocalSyncRuntime, transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient
 };
 use std::sync::Arc;
 use tcp::server::TcpServer;
@@ -22,23 +20,25 @@ async fn main() -> Result<()> {
         std::env::var("OPENWEATHERMAP_API_KEY")?,
         "https://api.openweathermap.org/data/3.0/onecall",
     )?);
-    
+
     let geocoding_client = Arc::new(NominatimClient::new(
         "https://nominatim.openstreetmap.org/search",
     )?);
-    
+
     let ollama_client = Arc::new(OllamaClient::new(
         "deepseek-r1:7b",
         "http://localhost:11434",
     )?);
-    
-    let processor = Arc::new(PatternMatchProcessor::new(
+
+    let parser = Arc::new(PatternMatchParser::new(
         weather_client,
         geocoding_client,
         ollama_client,
     ));
+    
+    let runtime = Arc::new(LocalSyncRuntime::new());
 
-    let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, processor)?;
+    let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, parser, runtime)?;
     loop {
         server.listen().await?;
     }

@@ -1,6 +1,7 @@
 pub mod geocoding;
 pub mod llm;
-pub mod processing;
+pub mod parsing;
 pub mod recording;
+pub mod runtime;
 pub mod transcription;
 pub mod weather;
