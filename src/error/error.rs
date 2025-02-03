@@ -20,8 +20,6 @@ pub enum Error {
     IoError(#[from] tokio::io::Error),
     #[error("Not a valid location: {0}")]
     GeocodingError(String),
-    #[error("No input device.")]
-    NoDefaultAudioInputDevice,
     #[error("Input device with the name {0} not found.")]
     AudioInputDeviceNotFound(String),
     #[error("Failed to lock: {0}")]
@@ -38,6 +36,4 @@ pub enum Error {
     EnvVarError(#[from] std::env::VarError),
     #[error("Whisper error: {0}")]
     WhisperError(#[from] whisper_rs::WhisperError),
-    #[error("Failed to write to client: {0}")]
-    ClientWriteError(String),
 }

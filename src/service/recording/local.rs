@@ -28,15 +28,6 @@ impl LocalRecorder {
         Self::set_up_recorder(device)
     }
 
-    pub fn new_default() -> Result<Self> {
-        let host = cpal::default_host();
-        let device = host
-            .default_input_device()
-            .ok_or(Error::NoDefaultAudioInputDevice)?;
-
-        Self::set_up_recorder(device)
-    }
-
     fn set_up_recorder(device: Device) -> Result<Self> {
         let config = cpal::StreamConfig {
             channels: CHANNELS,

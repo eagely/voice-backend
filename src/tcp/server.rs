@@ -1,18 +1,18 @@
-use crate::error::{Error, Result};
+use crate::error::Result;
+use crate::service::runtime::runtime_service::RuntimeService;
 use crate::service::{
-    processing::ProcessingService, recording::RecordingService, transcription::TranscriptionService,
+    parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
 };
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
-use std::pin::Pin;
 use std::sync::Arc;
-use tokio_stream::StreamExt; // to use stream.next().await
 
 pub struct TcpServer {
     listener: TcpListener,
     recorder: Box<dyn RecordingService>,
     transcriber: Arc<dyn TranscriptionService + Send + Sync>,
-    processor: Arc<dyn ProcessingService + Send + Sync>,
+    parser: Arc<dyn ParsingService + Send + Sync>,
+    runtime: Arc<dyn RuntimeService>,
 }
 
 impl TcpServer {
@@ -20,7 +20,8 @@ impl TcpServer {
         addr: &str,
         recorder: Box<dyn RecordingService>,
         transcriber: Arc<dyn TranscriptionService + Send + Sync>,
-        processor: Arc<dyn ProcessingService + Send + Sync>,
+        parser: Arc<dyn ParsingService + Send + Sync>,
+        runtime: Arc<dyn RuntimeService>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr)?;
 
@@ -28,7 +29,8 @@ impl TcpServer {
             listener,
             recorder,
             transcriber,
-            processor,
+            parser,
+            runtime,
         })
     }
 
@@ -54,17 +56,10 @@ impl TcpServer {
                 let audio = self.recorder.stop()?;
                 recording_active = false;
                 let transcription = self.transcriber.transcribe(&audio).await?;
-                match self.processor.process(&transcription).await {
-                    Ok(mut stream) => {
-                        while let Some(item) = stream.next().await {
-                            let output = item?;
-                            writeln!(writer, "{}", output)?;
-                            writer.flush()?;
-                        }
-                    }
-                    Err(e) => {
-                        writeln!(writer, "Error processing transcription: {}", e)?;
-                        writer.flush()?;
+                let transcription = "weather in vienna";
+                if let Some(action) = self.parser.parse(&transcription).await? {
+                    if let Some(output) = self.runtime.run(action)? {
+                        writeln!(writer, "{}", output)?;
                     }
                 }
             } else if trimmed == "STOP_RECORDING" {
