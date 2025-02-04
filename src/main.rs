@@ -5,7 +5,9 @@ mod tcp;
 
 use crate::error::Result;
 use service::{
-    geocoding::NominatimClient, llm::OllamaClient, parsing::PatternMatchParser, recording::LocalRecorder, runtime::local_sync_runtime::LocalSyncRuntime, transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient
+    geocoding::NominatimClient, llm::OllamaClient, parsing::PatternMatchParser,
+    recording::LocalRecorder, runtime::local_runtime::LocalRuntime,
+    transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
 use tcp::server::TcpServer;
@@ -16,11 +18,6 @@ async fn main() -> Result<()> {
 
     let recognizer = Arc::new(LocalWhisperTranscriber::new("base.bin")?);
 
-    let weather_client = Arc::new(OpenWeatherMapClient::new(
-        std::env::var("OPENWEATHERMAP_API_KEY")?,
-        "https://api.openweathermap.org/data/3.0/onecall",
-    )?);
-
     let geocoding_client = Arc::new(NominatimClient::new(
         "https://nominatim.openstreetmap.org/search",
     )?);
@@ -30,13 +27,18 @@ async fn main() -> Result<()> {
         "http://localhost:11434",
     )?);
 
-    let parser = Arc::new(PatternMatchParser::new(
-        weather_client,
+    let weather_client = Arc::new(OpenWeatherMapClient::new(
+        std::env::var("OPENWEATHERMAP_API_KEY")?,
+        "https://api.openweathermap.org/data/3.0/onecall",
+    )?);
+
+    let parser = Arc::new(PatternMatchParser::new());
+
+    let runtime = Arc::new(LocalRuntime::new(
         geocoding_client,
         ollama_client,
+        weather_client,
     ));
-    
-    let runtime = Arc::new(LocalSyncRuntime::new());
 
     let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, parser, runtime)?;
     loop {

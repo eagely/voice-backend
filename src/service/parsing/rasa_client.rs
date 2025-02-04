@@ -1,10 +1,7 @@
-use std::pin::Pin;
-
 use super::processing_service::ParsingService;
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 use reqwest::Client;
-use tokio_stream::Stream;
 use url::Url;
 
 pub struct RasaClient {
@@ -23,10 +20,7 @@ impl RasaClient {
 
 #[async_trait]
 impl ParsingService for RasaClient {
-    async fn parse(
-        &self,
-        input: &str,
-    ) -> Result<Option<Action>> {
+    async fn parse(&self, input: &str) -> Result<Option<Action>> {
         todo!()
     }
 }
