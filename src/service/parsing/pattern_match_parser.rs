@@ -1,30 +1,14 @@
 use super::ParsingService;
-use crate::model::action::{Entity, Intent};
-use crate::service::geocoding::GeocodingService;
-use crate::service::llm::LlmService;
-use crate::service::weather::WeatherService;
+use crate::model::action::{Entity, Intent, IntentKind};
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 use std::collections::HashMap;
-use std::sync::Arc;
 
-pub struct PatternMatchParser {
-    weather_service: Arc<dyn WeatherService>,
-    geocoding_service: Arc<dyn GeocodingService>,
-    llm_service: Arc<dyn LlmService>,
-}
+pub struct PatternMatchParser;
 
 impl PatternMatchParser {
-    pub fn new(
-        weather_service: Arc<dyn WeatherService>,
-        geocoding_service: Arc<dyn GeocodingService>,
-        llm_service: Arc<dyn LlmService>,
-    ) -> Self {
-        Self {
-            weather_service,
-            geocoding_service,
-            llm_service,
-        }
+    pub fn new() -> Self {
+        Self
     }
 
     fn remove(original: String, strings: &[&str]) -> String {
@@ -57,13 +41,21 @@ impl ParsingService for PatternMatchParser {
                 );
                 Ok(Some(Action {
                     intent: Intent {
-                        name: "weather".to_owned(),
+                        name: IntentKind::Weather,
                         confidence: 100f32,
                     },
-                    entities,
+                    entities: Some(entities),
+                    text: input.to_owned(),
                 }))
             }
-            _ => Ok(None),
+            _ => Ok(Some(Action {
+                intent: Intent {
+                    name: IntentKind::LLMQuery,
+                    confidence: 100f32,
+                },
+                entities: None,
+                text: input.to_owned(),
+            })),
         }
     }
 }

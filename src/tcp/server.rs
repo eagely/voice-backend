@@ -6,12 +6,13 @@ use crate::service::{
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
+use tokio_stream::StreamExt;
 
 pub struct TcpServer {
     listener: TcpListener,
     recorder: Box<dyn RecordingService>,
-    transcriber: Arc<dyn TranscriptionService + Send + Sync>,
-    parser: Arc<dyn ParsingService + Send + Sync>,
+    transcriber: Arc<dyn TranscriptionService>,
+    parser: Arc<dyn ParsingService>,
     runtime: Arc<dyn RuntimeService>,
 }
 
@@ -19,8 +20,8 @@ impl TcpServer {
     pub fn new(
         addr: &str,
         recorder: Box<dyn RecordingService>,
-        transcriber: Arc<dyn TranscriptionService + Send + Sync>,
-        parser: Arc<dyn ParsingService + Send + Sync>,
+        transcriber: Arc<dyn TranscriptionService>,
+        parser: Arc<dyn ParsingService>,
         runtime: Arc<dyn RuntimeService>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr)?;
@@ -57,8 +58,16 @@ impl TcpServer {
                 recording_active = false;
                 let transcription = self.transcriber.transcribe(&audio).await?;
                 if let Some(action) = self.parser.parse(&transcription).await? {
-                    if let Some(output) = self.runtime.run(action)? {
-                        writeln!(writer, "{}", output)?;
+                    let mut output_stream = self.runtime.run(action).await?;
+                    while let Some(output) = output_stream.next().await {
+                        match output {
+                            Ok(text) => {
+                                writeln!(writer, "{}", text)?;
+                            }
+                            Err(e) => {
+                                writeln!(writer, "Error: {}", e)?;
+                            }
+                        }
                     }
                 }
             } else if trimmed == "STOP_RECORDING" {
