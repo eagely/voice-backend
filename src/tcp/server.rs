@@ -56,7 +56,6 @@ impl TcpServer {
                 let audio = self.recorder.stop()?;
                 recording_active = false;
                 let transcription = self.transcriber.transcribe(&audio).await?;
-                let transcription = "weather in vienna";
                 if let Some(action) = self.parser.parse(&transcription).await? {
                     if let Some(output) = self.runtime.run(action)? {
                         writeln!(writer, "{}", output)?;
