@@ -2,7 +2,6 @@ use super::ParsingService;
 use crate::model::action::{Entity, Intent, IntentKind};
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
-use std::collections::HashMap;
 
 pub struct PatternMatchParser;
 
@@ -22,7 +21,7 @@ impl PatternMatchParser {
 
 #[async_trait]
 impl ParsingService for PatternMatchParser {
-    async fn parse(&self, input: &str) -> Result<Option<Action>> {
+    async fn parse(&self, input: &str) -> Result<Action> {
         let input_lower = input.to_lowercase();
 
         match input_lower.as_str() {
@@ -31,31 +30,24 @@ impl ParsingService for PatternMatchParser {
                     x.to_string(),
                     &["weather in", "weather", "whether in", "whether"],
                 );
-                let mut entities = HashMap::new();
-                entities.insert(
-                    "location".to_owned(),
-                    Entity {
-                        name: location,
-                        confidence: 100f32,
-                    },
-                );
-                Ok(Some(Action {
+                let entities = vec![Entity::new("GPE", location, None)];
+                Ok(Action {
                     intent: Intent {
-                        name: IntentKind::Weather,
-                        confidence: 100f32,
+                        name: IntentKind::WeatherQuery,
+                        confidence: None,
                     },
-                    entities: Some(entities),
+                    entities,
                     text: input.to_owned(),
-                }))
+                })
             }
-            _ => Ok(Some(Action {
+            _ => Ok(Action {
                 intent: Intent {
-                    name: IntentKind::LLMQuery,
-                    confidence: 100f32,
+                    name: IntentKind::LlmQuery,
+                    confidence: None,
                 },
-                entities: None,
+                entities: Vec::new(),
                 text: input.to_owned(),
-            })),
+            }),
         }
     }
 }
