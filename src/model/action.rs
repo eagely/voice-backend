@@ -1,22 +1,59 @@
-use std::collections::HashMap;
+use serde::Deserialize;
 
+#[derive(Deserialize)]
 pub struct Action {
     pub intent: Intent,
-    pub entities: Option<HashMap<String, Entity>>,
+    pub entities: Vec<Entity>,
     pub text: String,
 }
 
+impl Action {
+    pub fn new(intent: Intent, entities: Vec<Entity>, text: impl Into<String>) -> Action {
+        Action {
+            intent,
+            entities,
+            text: text.into(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
 pub struct Intent {
     pub name: IntentKind,
-    pub confidence: f32,
+    pub confidence: Option<f32>,
 }
 
+impl Intent {
+    pub fn new(name: IntentKind, confidence: Option<f32>) -> Intent {
+        Intent { name, confidence }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum IntentKind {
-    LLMQuery,
-    Weather,
+    LlmQuery,
+    WeatherQuery,
 }
 
+#[derive(Deserialize)]
 pub struct Entity {
-    pub name: String,
-    pub confidence: f32,
+    pub entity: String,
+    pub value: String,
+    #[serde(rename = "confidence_entity")]
+    pub confidence: Option<f32>,
+}
+
+impl Entity {
+    pub fn new(
+        entity: impl Into<String>,
+        value: impl Into<String>,
+        confidence: Option<f32>,
+    ) -> Entity {
+        Entity {
+            entity: entity.into(),
+            value: value.into(),
+            confidence,
+        }
+    }
 }

@@ -41,18 +41,27 @@ impl RuntimeService for LocalRuntime {
         &self,
         action: Action,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
+        if let Some(confidence) = action.intent.confidence {
+            if confidence < 90f32 {
+                return Self::string_stream(
+                    "I'm not sure if I understood you correctly. Could you say that again?",
+                );
+            }
+        }
         match action.intent.name {
-            IntentKind::LLMQuery => self.llm_service.request(&action.text.to_owned()).await,
-            IntentKind::Weather => {
-                let weather = match action.entities {
-                    Some(entities) => match entities.get("location") {
-                        Some(address) => {
-                            let geocode = self.geocoding_service.request(&address.name).await?;
-                            Self::string_stream(self.weather_service.request(geocode).await?)
+            IntentKind::LlmQuery => self.llm_service.request(&action.text.to_owned()).await,
+            IntentKind::WeatherQuery => {
+                let weather = match action.entities.iter().find(|entity| entity.entity == "GPE") {
+                    Some(location) => {
+                        if let Some(confidence) = location.confidence {
+                            if confidence < 95f32 {
+                                return Self::string_stream("I'm not sure which location you are referring to. Could you say that again?");
+                            }
                         }
-                        None => Self::string_stream("Could you repeat that?"),
-                    },
-                    None => Self::string_stream("Could you repeat that?"),
+                        let geocode = self.geocoding_service.request(&location.value).await?;
+                        Self::string_stream(self.weather_service.request(geocode).await?)
+                    }
+                    None => Self::string_stream("I couldn't figure out which location you were referring to, Could you say that again?"),
                 };
                 weather
             }

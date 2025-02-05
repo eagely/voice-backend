@@ -5,9 +5,13 @@ mod tcp;
 
 use crate::error::Result;
 use service::{
-    geocoding::NominatimClient, llm::OllamaClient, parsing::PatternMatchParser,
-    recording::LocalRecorder, runtime::local_runtime::LocalRuntime,
-    transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient,
+    geocoding::NominatimClient,
+    llm::OllamaClient,
+    parsing::{pattern_match_parser, PatternMatchParser, RasaClient},
+    recording::LocalRecorder,
+    runtime::local_runtime::LocalRuntime,
+    transcription::LocalWhisperTranscriber,
+    weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
 use tcp::server::TcpServer;
@@ -32,7 +36,7 @@ async fn main() -> Result<()> {
         "https://api.openweathermap.org/data/3.0/onecall",
     )?);
 
-    let parser = Arc::new(PatternMatchParser::new());
+    let rasa_client = Arc::new(RasaClient::new("http://localhost:5005")?);
 
     let runtime = Arc::new(LocalRuntime::new(
         geocoding_client,
@@ -40,7 +44,7 @@ async fn main() -> Result<()> {
         weather_client,
     ));
 
-    let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, parser, runtime)?;
+    let server = TcpServer::new("127.0.0.1:8080", recorder, recognizer, rasa_client, runtime)?;
     loop {
         server.listen().await?;
     }

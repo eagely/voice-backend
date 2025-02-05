@@ -57,16 +57,15 @@ impl TcpServer {
                 let audio = self.recorder.stop()?;
                 recording_active = false;
                 let transcription = self.transcriber.transcribe(&audio).await?;
-                if let Some(action) = self.parser.parse(&transcription).await? {
-                    let mut output_stream = self.runtime.run(action).await?;
-                    while let Some(output) = output_stream.next().await {
-                        match output {
-                            Ok(text) => {
-                                writeln!(writer, "{}", text)?;
-                            }
-                            Err(e) => {
-                                writeln!(writer, "Error: {}", e)?;
-                            }
+                let action = self.parser.parse(&transcription).await?;
+                let mut output_stream = self.runtime.run(action).await?;
+                while let Some(output) = output_stream.next().await {
+                    match output {
+                        Ok(text) => {
+                            writeln!(writer, "{}", text)?;
+                        }
+                        Err(e) => {
+                            writeln!(writer, "Error: {}", e)?;
                         }
                     }
                 }
