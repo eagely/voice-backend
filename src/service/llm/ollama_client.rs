@@ -46,7 +46,12 @@ impl LlmService for OllamaClient {
                         std::str::from_utf8(&bytes).map_err(|e| Error::ApiError(e.to_string()))?;
                     let json_value: Value = serde_json::from_str(json_str)
                         .map_err(|e| Error::JsonDeserializationError(e))?;
-                    let text = json_value["response"].as_str().unwrap_or("").to_string();
+                    let text = json_value["response"]
+                        .as_str()
+                        .ok_or(Error::ApiError(
+                            "Failed to parse response from Ollama".to_string(),
+                        ))?
+                        .to_string();
                     Ok(text)
                 })
             });

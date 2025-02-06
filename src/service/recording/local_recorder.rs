@@ -59,7 +59,7 @@ impl RecordingService for LocalRecorder {
     fn start(&self) -> Result<()> {
         self.buffer
             .lock()
-            .map_err(|_| Error::Lock("recording buffer".to_owned()))?
+            .map_err(|_| Error::Lock("recording buffer".to_string()))?
             .clear();
         self.stream.play()?;
         Ok(())
@@ -77,7 +77,7 @@ impl RecordingService for LocalRecorder {
         let recorded_data = self
             .buffer
             .lock()
-            .map_err(|_| Error::Lock("recording buffer".to_owned()))?
+            .map_err(|_| Error::Lock("recording buffer".to_string()))?
             .clone();
         let mut cursor = Cursor::new(Vec::new());
         {
