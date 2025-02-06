@@ -37,7 +37,7 @@ impl ParsingService for PatternMatchParser {
                         confidence: None,
                     },
                     entities,
-                    text: input.to_owned(),
+                    text: input.to_string(),
                 })
             }
             _ => Ok(Action {
@@ -46,7 +46,7 @@ impl ParsingService for PatternMatchParser {
                     confidence: None,
                 },
                 entities: Vec::new(),
-                text: input.to_owned(),
+                text: input.to_string(),
             }),
         }
     }

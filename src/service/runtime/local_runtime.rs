@@ -42,19 +42,21 @@ impl RuntimeService for LocalRuntime {
         action: Action,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
         if let Some(confidence) = action.intent.confidence {
-            if confidence < 90f32 {
+            if action.intent.name != IntentKind::LlmQuery && confidence < 0.9 {
                 return Self::string_stream(
                     "I'm not sure if I understood you correctly. Could you say that again?",
                 );
             }
         }
         match action.intent.name {
-            IntentKind::LlmQuery => self.llm_service.request(&action.text.to_owned()).await,
+            IntentKind::LlmQuery => self.llm_service.request(&action.text.to_string()).await,
             IntentKind::WeatherQuery => {
-                let weather = match action.entities.iter().find(|entity| entity.entity == "GPE") {
+                let weather = match action.entities.iter()
+                    .find(|entity| entity.entity == "GPE")
+                    .or_else(|| action.entities.iter().find(|entity| entity.entity == "location")) {
                     Some(location) => {
                         if let Some(confidence) = location.confidence {
-                            if confidence < 95f32 {
+                            if confidence < 0.9 {
                                 return Self::string_stream("I'm not sure which location you are referring to. Could you say that again?");
                             }
                         }

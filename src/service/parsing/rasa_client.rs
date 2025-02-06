@@ -1,8 +1,5 @@
 use super::processing_service::ParsingService;
-use crate::{
-    error::Result,
-    model::action::{Action, Intent, IntentKind},
-};
+use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::json;
@@ -36,11 +33,7 @@ impl ParsingService for RasaClient {
             .await?
             .text()
             .await?;
-        let action: Action = serde_json::from_str(&text).unwrap_or(Action::new(
-            Intent::new(IntentKind::LlmQuery, None),
-            Vec::new(),
-            input,
-        ));
+        let action: Action = serde_json::from_str(&text)?;
         Ok(action)
     }
 }

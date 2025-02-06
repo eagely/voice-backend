@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Action {
     pub intent: Intent,
     pub entities: Vec<Entity>,
@@ -17,7 +17,7 @@ impl Action {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Intent {
     pub name: IntentKind,
     pub confidence: Option<f32>,
@@ -29,14 +29,15 @@ impl Intent {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum IntentKind {
+    #[serde(rename = "nlu_fallback")]
     LlmQuery,
     WeatherQuery,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Entity {
     pub entity: String,
     pub value: String,

@@ -5,12 +5,8 @@ mod tcp;
 
 use crate::error::Result;
 use service::{
-    geocoding::NominatimClient,
-    llm::OllamaClient,
-    parsing::{pattern_match_parser, PatternMatchParser, RasaClient},
-    recording::LocalRecorder,
-    runtime::local_runtime::LocalRuntime,
-    transcription::LocalWhisperTranscriber,
+    geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
+    runtime::local_runtime::LocalRuntime, transcription::LocalWhisperTranscriber,
     weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
