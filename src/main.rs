@@ -1,7 +1,7 @@
 mod error;
 mod model;
 mod service;
-mod tcp;
+mod server;
 
 use crate::error::Result;
 use service::{
@@ -10,7 +10,7 @@ use service::{
     weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
-use tcp::server::TcpServer;
+use server::tcp::TcpServer;
 
 #[tokio::main]
 async fn main() -> Result<()> {

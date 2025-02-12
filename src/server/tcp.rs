@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::model::command::Command;
 use crate::service::runtime::runtime_service::RuntimeService;
 use crate::service::{
     parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
@@ -48,31 +49,36 @@ impl TcpServer {
         let mut recording_active = false;
 
         while reader.read_line(&mut line)? > 0 {
-            let trimmed = line.trim();
-            if trimmed == "START_RECORDING" {
-                self.recorder.start()?;
-                recording_active = true;
-                writeln!(writer, "Recording started.")?;
-            } else if trimmed == "STOP_RECORDING" && recording_active {
-                let audio = self.recorder.stop()?;
-                recording_active = false;
-                let transcription = self.transcriber.transcribe(&audio).await?;
-                let action = self.parser.parse(&transcription).await?;
-                let mut output_stream = self.runtime.run(action).await?;
-                while let Some(output) = output_stream.next().await {
-                    match output {
-                        Ok(text) => {
-                            writeln!(writer, "{}", text)?;
+            match line.as_str().into() {
+                Command::StartRecording => {
+                    self.recorder.start()?;
+                    recording_active = true;
+                    writeln!(writer, "Recording started.")?;
+                }
+                Command::StopRecording => {
+                    if recording_active {
+                        let audio = self.recorder.stop()?;
+                        recording_active = false;
+                        let transcription = self.transcriber.transcribe(&audio).await?;
+                        let action = self.parser.parse(&transcription).await?;
+                        let mut output_stream = self.runtime.run(action).await?;
+                        while let Some(output) = output_stream.next().await {
+                            match output {
+                                Ok(text) => {
+                                    writeln!(writer, "{}", text)?;
+                                }
+                                Err(e) => {
+                                    writeln!(writer, "Error: {}", e)?;
+                                }
+                            }
                         }
-                        Err(e) => {
-                            writeln!(writer, "Error: {}", e)?;
-                        }
+                    } else {
+                        writeln!(writer, "No recording in progress.")?;
                     }
                 }
-            } else if trimmed == "STOP_RECORDING" {
-                writeln!(writer, "No recording in progress.")?;
-            } else {
-                writeln!(writer, "Unknown command.")?;
+                Command::Unknown(command) => {
+                    writeln!(writer, "Unknown command: {}", command)?;
+                }
             }
             line.clear();
         }
