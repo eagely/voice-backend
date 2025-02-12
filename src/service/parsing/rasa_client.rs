@@ -1,4 +1,4 @@
-use super::processing_service::ParsingService;
+use super::parsing_service::ParsingService;
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 use reqwest::Client;

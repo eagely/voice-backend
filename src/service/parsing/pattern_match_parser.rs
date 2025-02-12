@@ -31,23 +31,17 @@ impl ParsingService for PatternMatchParser {
                     &["weather in", "weather", "whether in", "whether"],
                 );
                 let entities = vec![Entity::new("GPE", location, None)];
-                Ok(Action {
-                    intent: Intent {
-                        name: IntentKind::WeatherQuery,
-                        confidence: None,
-                    },
+                Ok(Action::new(
+                    Intent::new(IntentKind::WeatherQuery, None),
                     entities,
-                    text: input.to_string(),
-                })
+                    input.to_string(),
+                ))
             }
-            _ => Ok(Action {
-                intent: Intent {
-                    name: IntentKind::LlmQuery,
-                    confidence: None,
-                },
-                entities: Vec::new(),
-                text: input.to_string(),
-            }),
+            _ => Ok(Action::new(
+                Intent::new(IntentKind::LlmQuery, None),
+                Vec::new(),
+                input.to_string(),
+            )),
         }
     }
 }
