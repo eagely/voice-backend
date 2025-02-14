@@ -1,16 +1,16 @@
 mod error;
 mod model;
-mod service;
 mod server;
+mod service;
 
 use crate::error::Result;
+use server::tcp::TcpServer;
 use service::{
     geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
     runtime::local_runtime::LocalRuntime, transcription::LocalWhisperTranscriber,
     weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
-use server::tcp::TcpServer;
 
 #[tokio::main]
 async fn main() -> Result<()> {
