@@ -1,29 +1,28 @@
 use crate::error::Result;
 use crate::model::command::Command;
-use crate::service::runtime::runtime_service::RuntimeService;
+use crate::service::runtime::RuntimeService;
 use crate::service::{
     parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
 };
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
-use std::sync::Arc;
 use tokio_stream::StreamExt;
 
 pub struct TcpServer {
     listener: TcpListener,
     recorder: Box<dyn RecordingService>,
-    transcriber: Arc<dyn TranscriptionService>,
-    parser: Arc<dyn ParsingService>,
-    runtime: Arc<dyn RuntimeService>,
+    transcriber: Box<dyn TranscriptionService>,
+    parser: Box<dyn ParsingService>,
+    runtime: Box<dyn RuntimeService>,
 }
 
 impl TcpServer {
     pub fn new(
         addr: &str,
         recorder: Box<dyn RecordingService>,
-        transcriber: Arc<dyn TranscriptionService>,
-        parser: Arc<dyn ParsingService>,
-        runtime: Arc<dyn RuntimeService>,
+        transcriber: Box<dyn TranscriptionService>,
+        parser: Box<dyn ParsingService>,
+        runtime: Box<dyn RuntimeService>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr)?;
 
