@@ -12,6 +12,8 @@ pub enum Error {
     AudioInputDevices(#[from] cpal::DevicesError),
     #[error("Request error: {0}")]
     AudioStreamBuild(#[from] cpal::BuildStreamError),
+    #[error("Failed to load config: {0}")]
+    Config(#[from] config::ConfigError),
     #[error("Json deserialization error: {0}")]
     JsonDeserializationError(#[from] serde_json::Error),
     #[error("Invalid header value: {0}")]

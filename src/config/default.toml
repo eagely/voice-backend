@@ -1,0 +1,29 @@
+[server]
+host = "127.0.0.1"
+port = 8080
+
+[recorder]
+device_name = "pipewire"
+sample_rate = 16000
+channels = 1
+
+[transcriber]
+model_path = "base.bin"
+use_gpu = true
+
+[geocoding]
+base_url = "https://nominatim.openstreetmap.org/search"
+user_agent = "eagely's Voice Assistant/1.0"
+
+[llm]
+model = "deepseek-r1:7b"
+base_url = "http://localhost:11434"
+
+[weather]
+base_url = "https://api.openweathermap.org/data/3.0/onecall"
+
+[rasa]
+base_url = "http://localhost:5005"
+
+[user]
+default_location = "Vienna"
