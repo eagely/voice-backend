@@ -1,3 +1,4 @@
+mod config;
 mod error;
 mod model;
 mod server;
@@ -13,25 +14,25 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let recorder = Box::new(LocalRecorder::new("pipewire")?);
+    let config = Arc::new(config::AppConfig::new()?);
 
-    let transcriber = Box::new(LocalWhisperTranscriber::new("base.bin")?);
+    let recorder = Box::new(LocalRecorder::new(&config.recorder.device_name)?);
 
-    let geocoding_client = Arc::new(NominatimClient::new(
-        "https://nominatim.openstreetmap.org/search",
+    let transcriber = Box::new(LocalWhisperTranscriber::new(
+        &config.transcriber.model_path,
+        config.transcriber.use_gpu,
     )?);
 
-    let ollama_client = Arc::new(OllamaClient::new(
-        "deepseek-r1:7b",
-        "http://localhost:11434",
-    )?);
+    let geocoding_client = Arc::new(NominatimClient::new(&config.geocoding.base_url)?);
+
+    let ollama_client = Arc::new(OllamaClient::new(&config.llm.model, &config.llm.base_url)?);
 
     let weather_client = Arc::new(OpenWeatherMapClient::new(
         std::env::var("OPENWEATHERMAP_API_KEY")?,
-        "https://api.openweathermap.org/data/3.0/onecall",
+        &config.weather.base_url,
     )?);
 
-    let rasa_client = Box::new(RasaClient::new("http://localhost:5005")?);
+    let rasa_client = Box::new(RasaClient::new(&config.rasa.base_url)?);
 
     let runtime = Box::new(LocalRuntime::new(
         geocoding_client,
@@ -40,12 +41,13 @@ async fn main() -> Result<()> {
     ));
 
     let server = TcpServer::new(
-        "127.0.0.1:8080",
+        &format!("{}:{}", config.server.host, config.server.port),
         recorder,
         transcriber,
         rasa_client,
         runtime,
     )?;
+
     loop {
         server.listen().await?;
     }

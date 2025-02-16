@@ -12,9 +12,9 @@ pub struct LocalWhisperTranscriber {
 }
 
 impl LocalWhisperTranscriber {
-    pub fn new(model: impl Into<String>) -> Result<Self> {
+    pub fn new(model: impl Into<String>, use_gpu: bool) -> Result<Self> {
         let mut params = WhisperContextParameters::default();
-        params.use_gpu = true;
+        params.use_gpu = use_gpu;
         let context = Arc::new(WhisperContext::new_with_params(&model.into(), params)?);
         Ok(Self { context })
     }
