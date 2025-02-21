@@ -34,6 +34,7 @@ impl ParsingService for RasaClient {
             .text()
             .await?;
         let action: Action = serde_json::from_str(&text)?;
+        dbg!(&action);
         Ok(action)
     }
 }
