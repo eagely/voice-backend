@@ -5,14 +5,57 @@ use serde::Deserialize;
 use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
-pub struct ServerConfig {
-    pub host: String,
-    pub port: u16,
+pub struct AppConfig {
+    pub geocoding: GeocodingConfig,
+    pub llm: LlmConfig,
+    pub rasa: RasaConfig,
+    pub recorder: RecorderConfig,
+    pub response: ResponseConfig,
+    pub server: ServerConfig,
+    pub transcriber: TranscriberConfig,
+    pub tts: TtsConfig,
+    pub user: UserConfig,
+    pub weather: WeatherConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GeocodingConfig {
+    pub base_url: String,
+    pub user_agent: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LlmConfig {
+    pub base_url: String,
+    pub model: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RasaConfig {
+    pub base_url: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct RecorderConfig {
     pub device_name: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ResponseType {
+    Text,
+    Audio,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResponseConfig {
+    pub response_type: ResponseType,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -22,35 +65,19 @@ pub struct TranscriberConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GeocodingConfig {
+pub struct TtsConfig {
     pub base_url: String,
+    pub voice: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct LlmConfig {
-    pub model: String,
-    pub base_url: String,
+pub struct UserConfig {
+    pub default_location: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct WeatherConfig {
     pub base_url: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct RasaConfig {
-    pub base_url: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AppConfig {
-    pub server: ServerConfig,
-    pub recorder: RecorderConfig,
-    pub transcriber: TranscriberConfig,
-    pub geocoding: GeocodingConfig,
-    pub llm: LlmConfig,
-    pub weather: WeatherConfig,
-    pub rasa: RasaConfig,
 }
 
 impl AppConfig {

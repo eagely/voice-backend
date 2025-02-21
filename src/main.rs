@@ -8,7 +8,8 @@ use crate::error::Result;
 use server::tcp::TcpServer;
 use service::{
     geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
-    runtime::LocalRuntime, transcription::LocalWhisperTranscriber, weather::OpenWeatherMapClient,
+    runtime::LocalRuntime, transcription::LocalWhisperTranscriber, tts::PiperClient,
+    weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
 
@@ -32,20 +33,24 @@ async fn main() -> Result<()> {
         &config.weather.base_url,
     )?);
 
-    let rasa_client = Box::new(RasaClient::new(&config.rasa.base_url)?);
+    let parsing_service = Box::new(RasaClient::new(&config.rasa.base_url)?);
 
-    let runtime = Box::new(LocalRuntime::new(
+    let runtime_service = Box::new(LocalRuntime::new(
         geocoding_client,
         ollama_client,
         weather_client,
     ));
 
+    let tts_service = Box::new(PiperClient::new(&config.tts.base_url, &config.tts.voice)?);
+
     let server = TcpServer::new(
         &format!("{}:{}", config.server.host, config.server.port),
         recorder,
         transcriber,
-        rasa_client,
-        runtime,
+        parsing_service,
+        runtime_service,
+        tts_service,
+        Arc::new(config.response.response_type.clone()),
     )?;
 
     loop {

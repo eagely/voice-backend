@@ -1,11 +1,14 @@
+use crate::config::ResponseType;
 use crate::error::Result;
 use crate::model::command::Command;
 use crate::service::runtime::RuntimeService;
+use crate::service::tts::TtsService;
 use crate::service::{
     parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
 };
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
+use std::sync::Arc;
 use tokio_stream::StreamExt;
 
 pub struct TcpServer {
@@ -14,6 +17,8 @@ pub struct TcpServer {
     transcriber: Box<dyn TranscriptionService>,
     parser: Box<dyn ParsingService>,
     runtime: Box<dyn RuntimeService>,
+    tts_service: Box<dyn TtsService>,
+    response_type: Arc<ResponseType>,
 }
 
 impl TcpServer {
@@ -23,6 +28,8 @@ impl TcpServer {
         transcriber: Box<dyn TranscriptionService>,
         parser: Box<dyn ParsingService>,
         runtime: Box<dyn RuntimeService>,
+        tts: Box<dyn TtsService>,
+        response_type: Arc<ResponseType>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr)?;
 
@@ -32,6 +39,8 @@ impl TcpServer {
             transcriber,
             parser,
             runtime,
+            tts_service: tts,
+            response_type,
         })
     }
 
@@ -63,9 +72,14 @@ impl TcpServer {
                         let mut output_stream = self.runtime.run(action).await?;
                         while let Some(output) = output_stream.next().await {
                             match output {
-                                Ok(text) => {
-                                    writeln!(writer, "{}", text)?;
-                                }
+                                Ok(text) => match &*self.response_type {
+                                    ResponseType::Text => writeln!(writer, "{}", text)?,
+                                    ResponseType::Audio => {
+                                        let audio = self.tts_service.synthesize(&text).await?;
+                                        writer.write_all(&audio);
+                                        writer.flush()?;
+                                    }
+                                },
                                 Err(e) => {
                                     writeln!(writer, "Error: {}", e)?;
                                 }
