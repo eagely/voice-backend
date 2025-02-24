@@ -25,7 +25,7 @@ use_gpu = true
 
 [tts]
 base_url = "http://localhost:5000"
-voice = "en_US/ljspeech"
+voice = "en_US-ljspeech-high.onnx"
 
 [user]
 default_location = "Vienna"

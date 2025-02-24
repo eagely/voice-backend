@@ -76,7 +76,7 @@ impl TcpServer {
                                     ResponseType::Text => writeln!(writer, "{}", text)?,
                                     ResponseType::Audio => {
                                         let audio = self.tts_service.synthesize(&text).await?;
-                                        writer.write_all(&audio);
+                                        writer.write_all(&audio)?;
                                         writer.flush()?;
                                     }
                                 },

@@ -8,8 +8,8 @@ use crate::error::Result;
 use server::tcp::TcpServer;
 use service::{
     geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
-    runtime::LocalRuntime, transcription::LocalWhisperTranscriber, tts::PiperClient,
-    weather::OpenWeatherMapClient,
+    runtime::LocalRuntime, timer::memory_timer::MemoryTimer,
+    transcription::LocalWhisperTranscriber, tts::PiperClient, weather::OpenWeatherMapClient,
 };
 use std::sync::Arc;
 
@@ -24,21 +24,24 @@ async fn main() -> Result<()> {
         config.transcriber.use_gpu,
     )?);
 
-    let geocoding_client = Arc::new(NominatimClient::new(&config.geocoding.base_url)?);
+    let geocoding_service = Arc::new(NominatimClient::new(&config.geocoding.base_url)?);
 
-    let ollama_client = Arc::new(OllamaClient::new(&config.llm.model, &config.llm.base_url)?);
+    let llm_service = Arc::new(OllamaClient::new(&config.llm.model, &config.llm.base_url)?);
 
-    let weather_client = Arc::new(OpenWeatherMapClient::new(
+    let weather_service = Arc::new(OpenWeatherMapClient::new(
         std::env::var("OPENWEATHERMAP_API_KEY")?,
         &config.weather.base_url,
     )?);
 
+    let timer_service = Arc::new(MemoryTimer::new());
+
     let parsing_service = Box::new(RasaClient::new(&config.rasa.base_url)?);
 
     let runtime_service = Box::new(LocalRuntime::new(
-        geocoding_client,
-        ollama_client,
-        weather_client,
+        geocoding_service,
+        llm_service,
+        weather_service,
+        timer_service,
     ));
 
     let tts_service = Box::new(PiperClient::new(&config.tts.base_url, &config.tts.voice)?);

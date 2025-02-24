@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -34,27 +36,44 @@ impl Intent {
 pub enum IntentKind {
     #[serde(rename = "nlu_fallback")]
     LlmQuery,
+    SetTimer,
     WeatherQuery,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Entity {
     pub entity: String,
-    pub value: String,
+    pub value: EntityValue,
     #[serde(rename = "confidence_entity")]
     pub confidence: Option<f32>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum EntityValue {
+    String(String),
+    Duration(DurationValue),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DurationValue {
+    pub value: u64,
+    pub unit: String,
+}
+
 impl Entity {
-    pub fn new(
-        entity: impl Into<String>,
-        value: impl Into<String>,
-        confidence: Option<f32>,
-    ) -> Entity {
+    pub fn new(entity: impl Into<String>, value: EntityValue, confidence: Option<f32>) -> Entity {
         Entity {
             entity: entity.into(),
-            value: value.into(),
+            value,
             confidence,
+        }
+    }
+
+    pub fn get_duration(&self) -> Option<Duration> {
+        match &self.value {
+            EntityValue::Duration(d) => Some(Duration::from_secs(d.value)),
+            _ => None,
         }
     }
 }
