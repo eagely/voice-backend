@@ -1,5 +1,5 @@
 use super::ParsingService;
-use crate::model::action::{Entity, Intent, IntentKind};
+use crate::model::action::{Entity, EntityValue, Intent, IntentKind};
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 
@@ -30,7 +30,7 @@ impl ParsingService for PatternMatchParser {
                     x.to_string(),
                     &["weather in", "weather", "whether in", "whether"],
                 );
-                let entities = vec![Entity::new("GPE", location, None)];
+                let entities = vec![Entity::new("GPE", EntityValue::String(location), None)];
                 Ok(Action::new(
                     Intent::new(IntentKind::WeatherQuery, None),
                     entities,

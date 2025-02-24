@@ -25,7 +25,7 @@ impl PiperClient {
 #[async_trait]
 impl TtsService for PiperClient {
     async fn synthesize(&self, text: &str) -> Result<Bytes> {
-        let url = self.base_url.join("/api/tts")?;
+        let url = self.base_url.join("api/tts")?;
 
         let request_body = json!({
             "text": text,
