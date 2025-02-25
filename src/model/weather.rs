@@ -2,14 +2,14 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct WeatherResponse {
-    pub main: Main,
-    pub weather: Vec<Weather>,
+    pub current: Current,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Main {
+pub struct Current {
     pub temp: f64,
     pub humidity: u8,
+    pub weather: Vec<Weather>,
 }
 
 #[derive(Deserialize, Debug)]
