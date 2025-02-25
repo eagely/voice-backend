@@ -26,7 +26,7 @@ impl OpenWeatherMapClient {
 impl WeatherService for OpenWeatherMapClient {
     async fn request(&self, geocode: GeocodeResponse) -> Result<String> {
         let mut url = self.base_url.clone();
-        url.set_path("data/2.5/weather");
+        url.set_path("data/3.0/onecall");
         url.query_pairs_mut()
             .append_pair("appid", &self.api_key)
             .append_pair("lat", &geocode.lat.to_string())
@@ -37,11 +37,12 @@ impl WeatherService for OpenWeatherMapClient {
             serde_json::from_str(&self.client.get(url).send().await?.text().await?)?;
 
         let description = weather_response
+            .current
             .weather
             .first()
             .map_or(String::new(), |w| w.description.clone() + " and a");
-        let temp = weather_response.main.temp;
-        let humidity = weather_response.main.humidity;
+        let temp = weather_response.current.temp;
+        let humidity = weather_response.current.humidity;
 
         let result = format!(
             "The temperature in {} is {}°C with {} humidity of {}%",
