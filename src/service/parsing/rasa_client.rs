@@ -2,7 +2,7 @@ use super::parsing_service::ParsingService;
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 use reqwest::Client;
-use serde_json::json;
+use serde_json::{from_str, json};
 use url::Url;
 
 pub struct RasaClient {
@@ -33,8 +33,7 @@ impl ParsingService for RasaClient {
             .await?
             .text()
             .await?;
-        let action: Action = serde_json::from_str(&text)?;
-        dbg!(&action);
+        let action: Action = from_str(&text)?;
         Ok(action)
     }
 }

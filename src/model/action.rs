@@ -1,6 +1,9 @@
-use std::time::Duration;
+use std::{fmt, time::Duration};
 
-use serde::Deserialize;
+use serde::{
+    de::{Error, Visitor},
+    Deserialize, Deserializer,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct Action {
@@ -31,13 +34,43 @@ impl Intent {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, PartialEq, Eq)]
 pub enum IntentKind {
-    #[serde(rename = "nlu_fallback")]
     LlmQuery,
     SetTimer,
     WeatherQuery,
+    Other(String),
+}
+
+impl<'de> Deserialize<'de> for IntentKind {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct IntentKindVisitor;
+
+        impl<'de> Visitor<'de> for IntentKindVisitor {
+            type Value = IntentKind;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a string representing an intent kind")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<IntentKind, E>
+            where
+                E: Error,
+            {
+                match value {
+                    "nlu_fallback" => Ok(IntentKind::LlmQuery),
+                    "set_timer" => Ok(IntentKind::SetTimer),
+                    "weather_query" => Ok(IntentKind::WeatherQuery),
+                    _ => Ok(IntentKind::Other(value.to_owned())),
+                }
+            }
+        }
+
+        deserializer.deserialize_str(IntentKindVisitor)
+    }
 }
 
 #[derive(Debug, Deserialize)]

@@ -104,6 +104,10 @@ impl RuntimeService for LocalRuntime {
                                 };
                 response
             }
+            IntentKind::Other(intent_kind) => Ok(Box::pin(once(Ok(format!(
+                "The intent {} is not implemented.",
+                intent_kind
+            ))))),
         }
     }
 }
