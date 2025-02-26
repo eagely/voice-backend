@@ -25,4 +25,4 @@ tokio = { version = "1.43.0", features = [
 tokio-stream = "0.1.17"
 reqwest = { version = "0.12.12", features = ["json", "stream"] }
 url = "2.5.4"
-whisper-rs = "0.13.2"
+whisper-rs = "0.14.2"

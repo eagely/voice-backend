@@ -51,3 +51,35 @@ impl WeatherService for OpenWeatherMapClient {
         Ok(result)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::AppConfig;
+    use crate::model::geocode::GeocodeResponse;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn test_open_weather_map_client() -> Result<()> {
+        let config = Arc::new(AppConfig::new()?);
+
+        let client = OpenWeatherMapClient::new(
+            std::env::var("OPENWEATHERMAP_API_KEY")?,
+            &config.weather.base_url,
+        )?;
+
+        let geocode = GeocodeResponse {
+            name: "Vienna".to_string(),
+            lat: "48.2082".to_string(),
+            lon: "16.3738".to_string(),
+        };
+
+        let response = client.request(geocode).await?;
+
+        assert!(response.contains("Vienna"));
+        assert!(response.contains("temperature"));
+        assert!(response.contains("humidity"));
+
+        Ok(())
+    }
+}

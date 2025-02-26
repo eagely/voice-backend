@@ -34,9 +34,31 @@ impl GeocodingService for NominatimClient {
             .append_pair("limit", "1");
         let response = self.client.get(url).send().await?.text().await?;
         let coordinates: Vec<GeocodeResponse> = serde_json::from_str(&response)?;
-        coordinates
-            .into_iter()
-            .next()
-            .ok_or_else(|| crate::error::Error::GeocodingError(format!("No results for address: {}", address)))
+        coordinates.into_iter().next().ok_or_else(|| {
+            crate::error::Error::GeocodingError(format!("No results for address: {}", address))
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::AppConfig;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn test_nominatim_client() -> Result<()> {
+        let config = Arc::new(AppConfig::new()?);
+
+        let client = NominatimClient::new(&config.geocoding.base_url)?;
+
+        let address = "Vienna";
+        let response = client.request(address).await?;
+
+        assert_eq!(response.name, "Wien");
+        assert!(!response.lat.is_empty());
+        assert!(!response.lon.is_empty());
+
+        Ok(())
     }
 }
