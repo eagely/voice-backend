@@ -45,3 +45,33 @@ impl ParsingService for PatternMatchParser {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::AppConfig;
+    use crate::model::action::{EntityValue, IntentKind};
+    use crate::service::parsing::RasaClient;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn test_rasa_client_parse_weather_intent() -> Result<()> {
+        let config = Arc::new(AppConfig::new()?);
+
+        let rasa_client = RasaClient::new(&config.rasa.base_url)?;
+
+        let action = rasa_client.parse("Weather in Vienna").await?;
+
+        assert_eq!(action.intent.name, IntentKind::WeatherQuery);
+        assert!(action.intent.confidence.unwrap_or(0.0) > 0.0);
+        assert_eq!(action.text, "Weather in Vienna");
+        assert!(!action.entities.is_empty());
+        assert_eq!(action.entities[0].entity, "GPE");
+        assert_eq!(
+            action.entities[0].value,
+            EntityValue::String("Vienna".to_string())
+        );
+
+        Ok(())
+    }
+}

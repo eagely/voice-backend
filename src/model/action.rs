@@ -81,14 +81,14 @@ pub struct Entity {
     pub confidence: Option<f32>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum EntityValue {
     String(String),
     Duration(DurationValue),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct DurationValue {
     pub value: u64,
     pub unit: String,
