@@ -1,13 +1,12 @@
 use crate::error::Result;
 use crate::model::action::Action;
 use async_trait::async_trait;
-use std::pin::Pin;
-use tokio_stream::Stream;
+use futures::stream::BoxStream;
 
 #[async_trait]
 pub trait RuntimeService: Send + Sync {
     async fn run(
         &self,
         action: Action,
-    ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>>;
+    ) -> Result<BoxStream<'static, Result<String>>>;
 }

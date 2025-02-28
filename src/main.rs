@@ -5,7 +5,7 @@ mod server;
 mod service;
 
 use crate::error::Result;
-use server::tcp::TcpServer;
+use server::ws::WsServer;
 use service::{
     geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
     runtime::LocalRuntime, timer::memory_timer::MemoryTimer,
@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
 
     let tts_service = Box::new(PiperClient::new(&config.tts.base_url, &config.tts.voice)?);
 
-    let server = TcpServer::new(
+    let server = WsServer::new(
         &format!("{}:{}", config.server.host, config.server.port),
         recorder,
         transcriber,
@@ -54,9 +54,10 @@ async fn main() -> Result<()> {
         runtime_service,
         tts_service,
         Arc::new(config.response.response_type.clone()),
-    )?;
+    )
+    .await?;
 
-    loop {
-        server.listen().await?;
-    }
+    server.listen().await?;
+
+    Ok(())
 }

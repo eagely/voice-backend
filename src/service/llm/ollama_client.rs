@@ -1,12 +1,9 @@
-use std::pin::Pin;
-
 use super::LlmService;
 use crate::error::{Error, Result};
 use async_trait::async_trait;
+use futures_util::stream::{BoxStream, StreamExt};
 use reqwest::Client;
 use serde_json::Value;
-use tokio_stream::Stream;
-use tokio_stream::StreamExt;
 use url::Url;
 
 pub struct OllamaClient {
@@ -27,10 +24,7 @@ impl OllamaClient {
 
 #[async_trait]
 impl LlmService for OllamaClient {
-    async fn request(
-        &self,
-        input: &str,
-    ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
+    async fn request(&self, input: &str) -> Result<BoxStream<'static, Result<String>>> {
         let request_body = serde_json::json!({
             "model": self.model,
             "prompt": input,
@@ -56,7 +50,7 @@ impl LlmService for OllamaClient {
                 })
             });
 
-            Ok(Box::pin(stream))
+            Ok(stream.boxed())
         } else {
             let error_json: std::result::Result<Value, _> = response.json().await;
             let error_message = match error_json {
