@@ -28,6 +28,8 @@ pub enum Error {
     JsonDeserializationError(#[from] serde_json::Error),
     #[error("Failed to lock: {0}")]
     Lock(String),
+    #[error("Notification error: {0}")]
+    NotificationError(#[from] notify_rust::error::Error),
     #[error("Failed to pause stream: {0}")]
     PauseAudioStream(#[from] cpal::PauseStreamError),
     #[error("Failed to play stream: {0}")]
