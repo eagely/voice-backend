@@ -17,7 +17,7 @@ pub struct WsServer {
     transcriber: Box<dyn TranscriptionService>,
     parser: Box<dyn ParsingService>,
     runtime: Box<dyn RuntimeService>,
-    tts_service: Box<dyn TtsService>,
+    tts: Box<dyn TtsService>,
     response_type: Arc<ResponseType>,
 }
 
@@ -38,7 +38,7 @@ impl WsServer {
             transcriber,
             parser,
             runtime,
-            tts_service: tts,
+            tts,
             response_type,
         })
     }
@@ -76,7 +76,7 @@ impl WsServer {
                                             ws_stream.send(text.into()).await?;
                                         }
                                         ResponseType::Audio => {
-                                            let audio = self.tts_service.synthesize(&text).await?;
+                                            let audio = self.tts.synthesize(&text).await?;
                                             ws_stream.send(Message::Binary(audio)).await?;
                                         }
                                     },

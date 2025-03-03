@@ -42,4 +42,6 @@ pub enum Error {
     WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
     #[error("Whisper error: {0}")]
     WhisperError(#[from] whisper_rs::WhisperError),
+    #[error("Wmctrl error: {0}")]
+    WmctrlError(String),
 }

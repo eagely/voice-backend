@@ -5,6 +5,7 @@ use crate::service::geocoding::GeocodingService;
 use crate::service::llm::LlmService;
 use crate::service::timer::timer_service::TimerService;
 use crate::service::weather::WeatherService;
+use crate::service::workspace::WorkspaceService;
 use async_trait::async_trait;
 use futures::stream::{self, BoxStream, StreamExt};
 use std::sync::Arc;
@@ -15,6 +16,7 @@ pub struct LocalRuntime {
     llm_service: Arc<dyn LlmService>,
     weather_service: Arc<dyn WeatherService>,
     timer_service: Arc<dyn TimerService>,
+    workspace_service: Arc<dyn WorkspaceService>,
 }
 
 impl LocalRuntime {
@@ -23,12 +25,14 @@ impl LocalRuntime {
         llm_service: Arc<dyn LlmService>,
         weather_service: Arc<dyn WeatherService>,
         timer_service: Arc<dyn TimerService>,
+        workspace_service: Arc<dyn WorkspaceService>,
     ) -> Self {
         Self {
             geocoding_service,
             llm_service,
             weather_service,
             timer_service,
+            workspace_service,
         }
     }
 
@@ -104,6 +108,14 @@ impl RuntimeService for LocalRuntime {
                     None => Self::string_stream("I couldn't figure out which location you were referring to. Could you say that again?"),
                 };
                 response
+            }
+            IntentKind::MinimizeWindow => {
+                self.workspace_service.minimize_window().await?;
+                Self::string_stream("Window minimized.")
+            }
+            IntentKind::MaximizeWindow => {
+                self.workspace_service.maximize_window().await?;
+                Self::string_stream("Window maximized.")
             }
             IntentKind::Other(intent_kind) => {
                 let response = format!("The intent {} is not implemented.", intent_kind);

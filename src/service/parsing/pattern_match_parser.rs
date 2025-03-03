@@ -37,6 +37,16 @@ impl ParsingService for PatternMatchParser {
                     input.to_string(),
                 ))
             }
+            x if x.contains("minimize") => Ok(Action::new(
+                Intent::new(IntentKind::MinimizeWindow, None),
+                Vec::new(),
+                input.to_string(),
+            )),
+            x if x.contains("maximize") => Ok(Action::new(
+                Intent::new(IntentKind::MaximizeWindow, None),
+                Vec::new(),
+                input.to_string(),
+            )),
             _ => Ok(Action::new(
                 Intent::new(IntentKind::LlmQuery, None),
                 Vec::new(),

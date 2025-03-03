@@ -10,6 +10,7 @@ use service::{
     geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
     runtime::LocalRuntime, timer::memory_timer::MemoryTimer,
     transcription::LocalWhisperTranscriber, tts::PiperClient, weather::OpenWeatherMapClient,
+    workspace::KWinClient,
 };
 use std::sync::Arc;
 
@@ -37,11 +38,14 @@ async fn main() -> Result<()> {
 
     let parsing_service = Box::new(RasaClient::new(&config.rasa.base_url)?);
 
+    let workspace_service = Arc::new(KWinClient);
+
     let runtime_service = Box::new(LocalRuntime::new(
         geocoding_service,
         llm_service,
         weather_service,
         timer_service,
+        workspace_service,
     ));
 
     let tts_service = Box::new(PiperClient::new(&config.tts.base_url, &config.tts.voice)?);

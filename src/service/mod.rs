@@ -7,3 +7,4 @@ pub mod timer;
 pub mod transcription;
 pub mod tts;
 pub mod weather;
+pub mod workspace;
