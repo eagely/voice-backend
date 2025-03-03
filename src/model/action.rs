@@ -39,6 +39,8 @@ pub enum IntentKind {
     LlmQuery,
     SetTimer,
     WeatherQuery,
+    MinimizeWindow,
+    MaximizeWindow,
     Other(String),
 }
 
@@ -64,6 +66,8 @@ impl<'de> Deserialize<'de> for IntentKind {
                     "nlu_fallback" => Ok(IntentKind::LlmQuery),
                     "set_timer" => Ok(IntentKind::SetTimer),
                     "weather_query" => Ok(IntentKind::WeatherQuery),
+                    "minimize_window" => Ok(IntentKind::MinimizeWindow),
+                    "maximize_window" => Ok(IntentKind::MaximizeWindow),
                     _ => Ok(IntentKind::Other(value.to_owned())),
                 }
             }
