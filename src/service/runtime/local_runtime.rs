@@ -55,9 +55,21 @@ impl RuntimeService for LocalRuntime {
         }
 
         match action.intent.name {
+            IntentKind::CloseWindow => {
+                self.workspace_service.close_window().await?;
+                Self::string_stream("Window closed.")
+            }
             IntentKind::LlmQuery => {
                 let response = self.llm_service.request(&action.text).await;
                 response
+            }
+            IntentKind::MinimizeWindow => {
+                self.workspace_service.minimize_window().await?;
+                Self::string_stream("Window minimized.")
+            }
+            IntentKind::MaximizeWindow => {
+                self.workspace_service.maximize_window().await?;
+                Self::string_stream("Window maximized.")
             }
             IntentKind::SetTimer => {
                 let duration = action
@@ -72,6 +84,31 @@ impl RuntimeService for LocalRuntime {
                 let response = match duration {
                     Some(duration) => self.timer_service.set(duration, action.text).await?,
                     None => "Please specify a clear duration for the timer.".to_string(),
+                };
+
+                Self::string_stream(response)
+            }
+            IntentKind::SwitchWorkspace => {
+                let workspace_entity = action
+                    .entities
+                    .iter()
+                    .find(|entity| entity.entity == "workspace");
+
+                let response = match workspace_entity {
+                    Some(entity) => {
+                        if let Some(confidence) = entity.confidence {
+                            if confidence < 0.9 {
+                                return Self::string_stream("I'm not sure which workspace you are referring to. Could you say that again?");
+                            }
+                        }
+                        if let EntityValue::Index(index) = entity.value {
+                            self.workspace_service.switch_workspace(index).await?;
+                            format!("Switched to workspace {}.", index)
+                        } else {
+                            "Please specify a workspace to switch to.".to_string()
+                        }
+                    }
+                    None => "Please specify a clear workspace to switch to.".to_string(),
                 };
 
                 Self::string_stream(response)
@@ -109,14 +146,7 @@ impl RuntimeService for LocalRuntime {
                 };
                 response
             }
-            IntentKind::MinimizeWindow => {
-                self.workspace_service.minimize_window().await?;
-                Self::string_stream("Window minimized.")
-            }
-            IntentKind::MaximizeWindow => {
-                self.workspace_service.maximize_window().await?;
-                Self::string_stream("Window maximized.")
-            }
+
             IntentKind::Other(intent_kind) => {
                 let response = format!("The intent {} is not implemented.", intent_kind);
                 Self::string_stream(response)

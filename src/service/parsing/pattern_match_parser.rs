@@ -2,6 +2,8 @@ use super::ParsingService;
 use crate::model::action::{Entity, EntityValue, Intent, IntentKind};
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
+use regex::Regex;
+use std::collections::HashMap;
 
 pub struct PatternMatchParser;
 
@@ -16,6 +18,43 @@ impl PatternMatchParser {
             result = result.replace(s, "");
         }
         result
+    }
+
+    fn get_closest_number(input: &str, keyword: &str) -> Option<usize> {
+        let re = Regex::new(r"\d+|one|two|three|four|five|six|seven|eight|nine|ten").unwrap();
+        let closest_number: Option<usize> = None;
+
+        let spelled_out_numbers: HashMap<&str, usize> = [
+            ("one", 1),
+            ("two", 2),
+            ("three", 3),
+            ("four", 4),
+            ("five", 5),
+            ("six", 6),
+            ("seven", 7),
+            ("eight", 8),
+            ("nine", 9),
+            ("ten", 10),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        if let Some(keyword_pos) = input.find(keyword) {
+            for cap in re.captures_iter(&input[keyword_pos + keyword.len()..]) {
+                let number = if let Ok(num) = cap[0].parse::<usize>() {
+                    num
+                } else {
+                    *spelled_out_numbers.get(&cap[0]).unwrap_or(&0)
+                };
+
+                if number != 0 {
+                    return Some(number);
+                }
+            }
+        }
+
+        closest_number
     }
 }
 
@@ -47,6 +86,26 @@ impl ParsingService for PatternMatchParser {
                 Vec::new(),
                 input.to_string(),
             )),
+            x if x.contains("close") => Ok(Action::new(
+                Intent::new(IntentKind::CloseWindow, None),
+                Vec::new(),
+                input.to_string(),
+            )),
+            x if x.contains("switch") && (x.contains("workspace") || x.contains("desktop")) => {
+                if let Some(index) = Self::get_closest_number(x, "switch") {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::SwitchWorkspace, None),
+                        vec![Entity::new("NUMBER", EntityValue::Index(index), None)],
+                        input.to_string(),
+                    ))
+                } else {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::LlmQuery, None),
+                        Vec::new(),
+                        input.to_string(),
+                    ))
+                }
+            }
             _ => Ok(Action::new(
                 Intent::new(IntentKind::LlmQuery, None),
                 Vec::new(),
@@ -81,6 +140,66 @@ mod tests {
             action.entities[0].value,
             EntityValue::String("Vienna".to_string())
         );
+
+        Ok(())
+    }
+    #[tokio::test]
+    async fn test_pattern_match_parser_minimize_window() -> Result<()> {
+        let parser = PatternMatchParser::new();
+
+        let action = parser.parse("Minimize the window").await?;
+        assert_eq!(action.intent.name, IntentKind::MinimizeWindow);
+        assert!(action.entities.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_pattern_match_parser_maximize_window() -> Result<()> {
+        let parser = PatternMatchParser::new();
+
+        let action = parser.parse("Maximize the window").await?;
+        assert_eq!(action.intent.name, IntentKind::MaximizeWindow);
+        assert!(action.entities.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_pattern_match_parser_close_window() -> Result<()> {
+        let parser = PatternMatchParser::new();
+
+        let action = parser.parse("Close the window").await?;
+        assert_eq!(action.intent.name, IntentKind::CloseWindow);
+        assert!(action.entities.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_pattern_match_parser_switch_workspace() -> Result<()> {
+        let parser = PatternMatchParser::new();
+
+        let action = parser.parse("Switch to workspace 3").await?;
+        assert_eq!(action.intent.name, IntentKind::SwitchWorkspace);
+        assert_eq!(action.entities[0].entity, "NUMBER");
+        assert_eq!(action.entities[0].value, EntityValue::Index(3));
+
+        let action = parser.parse("Switch to workspace three").await?;
+        assert_eq!(action.intent.name, IntentKind::SwitchWorkspace);
+        assert_eq!(action.entities[0].entity, "NUMBER");
+        assert_eq!(action.entities[0].value, EntityValue::Index(3));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_pattern_match_parser_llm_query() -> Result<()> {
+        let parser = PatternMatchParser::new();
+
+        let action = parser.parse("Tell me a joke").await?;
+        assert_eq!(action.intent.name, IntentKind::LlmQuery);
+        assert!(action.entities.is_empty());
 
         Ok(())
     }

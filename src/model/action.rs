@@ -36,11 +36,13 @@ impl Intent {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum IntentKind {
+    CloseWindow,
     LlmQuery,
-    SetTimer,
-    WeatherQuery,
-    MinimizeWindow,
     MaximizeWindow,
+    MinimizeWindow,
+    SetTimer,
+    SwitchWorkspace,
+    WeatherQuery,
     Other(String),
 }
 
@@ -63,11 +65,13 @@ impl<'de> Deserialize<'de> for IntentKind {
                 E: Error,
             {
                 match value {
+                    "close_window" => Ok(IntentKind::CloseWindow),
                     "nlu_fallback" => Ok(IntentKind::LlmQuery),
-                    "set_timer" => Ok(IntentKind::SetTimer),
-                    "weather_query" => Ok(IntentKind::WeatherQuery),
-                    "minimize_window" => Ok(IntentKind::MinimizeWindow),
                     "maximize_window" => Ok(IntentKind::MaximizeWindow),
+                    "minimize_window" => Ok(IntentKind::MinimizeWindow),
+                    "set_timer" => Ok(IntentKind::SetTimer),
+                    "switch_workspace" => Ok(IntentKind::SwitchWorkspace),
+                    "weather_query" => Ok(IntentKind::WeatherQuery),
                     _ => Ok(IntentKind::Other(value.to_owned())),
                 }
             }
@@ -88,8 +92,9 @@ pub struct Entity {
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum EntityValue {
-    String(String),
+    Index(usize),
     Duration(DurationValue),
+    String(String),
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
