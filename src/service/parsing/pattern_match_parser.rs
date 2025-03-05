@@ -1,5 +1,5 @@
 use super::ParsingService;
-use crate::model::action::{Entity, EntityValue, Intent, IntentKind};
+use crate::model::action::{DurationValue, Entity, EntityValue, Intent, IntentKind};
 use crate::{error::Result, model::action::Action};
 use async_trait::async_trait;
 use regex::Regex;
@@ -56,6 +56,17 @@ impl PatternMatchParser {
 
         closest_number
     }
+
+    fn extract_duration(input: &str) -> Option<DurationValue> {
+        let re = Regex::new(r"(\d+)\s*(seconds?|minutes?|hours?)").unwrap();
+        if let Some(caps) = re.captures(input) {
+            let value = caps.get(1)?.as_str().parse::<u64>().ok()?;
+            let unit = caps.get(2)?.as_str().to_string();
+            Some(DurationValue { value, unit })
+        } else {
+            None
+        }
+    }
 }
 
 #[async_trait]
@@ -64,18 +75,11 @@ impl ParsingService for PatternMatchParser {
         let input_lower = input.to_lowercase();
 
         match input_lower.as_str() {
-            x if x.contains("weather") || x.contains("whether") => {
-                let location = Self::remove(
-                    x.to_string(),
-                    &["weather in", "weather", "whether in", "whether"],
-                );
-                let entities = vec![Entity::new("GPE", EntityValue::String(location), None)];
-                Ok(Action::new(
-                    Intent::new(IntentKind::WeatherQuery, None),
-                    entities,
-                    input.to_string(),
-                ))
-            }
+            x if x.contains("close") => Ok(Action::new(
+                Intent::new(IntentKind::CloseWindow, None),
+                Vec::new(),
+                input.to_string(),
+            )),
             x if x.contains("minimize") => Ok(Action::new(
                 Intent::new(IntentKind::MinimizeWindow, None),
                 Vec::new(),
@@ -86,11 +90,39 @@ impl ParsingService for PatternMatchParser {
                 Vec::new(),
                 input.to_string(),
             )),
-            x if x.contains("close") => Ok(Action::new(
-                Intent::new(IntentKind::CloseWindow, None),
-                Vec::new(),
-                input.to_string(),
-            )),
+            x if x.contains("open") => {
+                let application = Self::remove(x.to_string(), &["open"]);
+                let entities = vec![Entity::new(
+                    "APPLICATION",
+                    EntityValue::String(application),
+                    None,
+                )];
+                Ok(Action::new(
+                    Intent::new(IntentKind::OpenApplication, None),
+                    entities,
+                    input.to_string(),
+                ))
+            }
+            x if x.contains("timer") || x.contains("alarm") => {
+                if let Some(duration) = Self::extract_duration(x) {
+                    let entities = vec![Entity::new(
+                        "duration",
+                        EntityValue::Duration(duration),
+                        None,
+                    )];
+                    Ok(Action::new(
+                        Intent::new(IntentKind::SetTimer, None),
+                        entities,
+                        input.to_string(),
+                    ))
+                } else {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::LlmQuery, None),
+                        Vec::new(),
+                        "Please specify a clear duration for the timer.".to_string(),
+                    ))
+                }
+            }
             x if x.contains("switch") && (x.contains("workspace") || x.contains("desktop")) => {
                 if let Some(index) = Self::get_closest_number(x, "switch") {
                     Ok(Action::new(
@@ -105,6 +137,18 @@ impl ParsingService for PatternMatchParser {
                         input.to_string(),
                     ))
                 }
+            }
+            x if x.contains("weather") || x.contains("whether") => {
+                let location = Self::remove(
+                    x.to_string(),
+                    &["weather in", "weather", "whether in", "whether"],
+                );
+                let entities = vec![Entity::new("GPE", EntityValue::String(location), None)];
+                Ok(Action::new(
+                    Intent::new(IntentKind::WeatherQuery, None),
+                    entities,
+                    input.to_string(),
+                ))
             }
             _ => Ok(Action::new(
                 Intent::new(IntentKind::LlmQuery, None),
