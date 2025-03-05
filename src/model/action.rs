@@ -40,6 +40,7 @@ pub enum IntentKind {
     LlmQuery,
     MaximizeWindow,
     MinimizeWindow,
+    OpenApplication,
     SetTimer,
     SwitchWorkspace,
     WeatherQuery,

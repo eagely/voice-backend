@@ -82,6 +82,21 @@ impl WorkspaceService for KWinClient {
 
         Ok(())
     }
+
+    async fn open_application(&self, application: &str) -> Result<()> {
+        let output = Command::new(application)
+            .output()
+            .map_err(|e| WmctrlError(e.to_string()))?;
+
+        if !output.status.success() {
+            return Err(WmctrlError(format!(
+                "Failed to open application: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -128,6 +143,19 @@ mod tests {
 
         let close_window_result = kwin_client.close_window().await;
         assert!(close_window_result.is_ok(), "Failed to close window");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_open_application() -> Result<()> {
+        let kwin_client = KWinClient;
+
+        let open_application_result = kwin_client.open_application("zeditor").await;
+        assert!(
+            open_application_result.is_ok(),
+            "Failed to open application: zeditor"
+        );
 
         Ok(())
     }

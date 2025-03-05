@@ -71,6 +71,33 @@ impl RuntimeService for LocalRuntime {
                 self.workspace_service.maximize_window().await?;
                 Self::string_stream("Window maximized.")
             }
+            IntentKind::OpenApplication => {
+                let application_entity = action
+                    .entities
+                    .iter()
+                    .find(|entity| entity.entity == "APPLICATION");
+
+                let response = match application_entity {
+                                Some(entity) => {
+                                    if let Some(confidence) = entity.confidence {
+                                        if confidence < 0.9 {
+                                            return Self::string_stream("I'm not sure which application you are referring to. Could you say that again?");
+                                        }
+                                    }
+
+                                    match &entity.value {
+                                        EntityValue::String(application) => {
+                                            self.workspace_service.open_application(application).await?;
+                                            format!("Opened application: {}.", application)
+                                        },
+                                        _ => "Invalid application format received.".to_string()
+                                    }
+                                }
+                                None => "I couldn't figure out which application you were referring to. Could you say that again?".to_string(),
+                            };
+
+                Self::string_stream(response)
+            }
             IntentKind::SetTimer => {
                 let duration = action
                     .entities
