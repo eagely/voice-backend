@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.87"
-bytes = "1.10.0"
+bytes = "1.10.1"
 config = "0.15.9"
 cpal = "0.15.3"
 directories = "6.0.0"

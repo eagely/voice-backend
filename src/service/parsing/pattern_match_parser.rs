@@ -98,7 +98,7 @@ impl ParsingService for PatternMatchParser {
                     None,
                 )];
                 Ok(Action::new(
-                    Intent::new(IntentKind::OpenApplication, None),
+                    Intent::new(IntentKind::RunCommand, None),
                     entities,
                     input.to_string(),
                 ))

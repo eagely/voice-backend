@@ -71,7 +71,7 @@ impl RuntimeService for LocalRuntime {
                 self.workspace_service.maximize_window().await?;
                 Self::string_stream("Window maximized.")
             }
-            IntentKind::OpenApplication => {
+            IntentKind::RunCommand => {
                 let application_entity = action
                     .entities
                     .iter()
@@ -87,7 +87,7 @@ impl RuntimeService for LocalRuntime {
 
                                     match &entity.value {
                                         EntityValue::String(application) => {
-                                            self.workspace_service.open_application(application).await?;
+                                            self.workspace_service.run_command(application).await?;
                                             format!("Opened application: {}.", application)
                                         },
                                         _ => "Invalid application format received.".to_string()
