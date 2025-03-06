@@ -39,9 +39,9 @@ pub enum Error {
     #[error("Url parse error: {0}")]
     UrlParseError(#[from] url::ParseError),
     #[error("WebSocket communication error: {0}")]
-    WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
+    WebSocketError(#[from] tokio_tungstenite::tungstenite::Error),
     #[error("Whisper error: {0}")]
     WhisperError(#[from] whisper_rs::WhisperError),
-    #[error("Wmctrl error: {0}")]
-    WmctrlError(String),
+    #[error("Workspace management error: {0}")]
+    WorkspaceManagementError(String),
 }
