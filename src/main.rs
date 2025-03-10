@@ -5,6 +5,7 @@ mod server;
 mod service;
 
 use crate::error::Result;
+use config::AppConfig;
 use server::ws::WsServer;
 use service::{
     geocoding::NominatimClient, llm::OllamaClient, parsing::RasaClient, recording::LocalRecorder,
@@ -16,7 +17,7 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let config = Arc::new(config::AppConfig::new()?);
+    let config = Arc::new(AppConfig::new()?);
 
     let recorder = Box::new(LocalRecorder::new(&config.recorder.device_name)?);
 
@@ -58,6 +59,7 @@ async fn main() -> Result<()> {
         runtime_service,
         tts_service,
         Arc::new(config.response.response_type.clone()),
+        config.clone(),
     )
     .await?;
 

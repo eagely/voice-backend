@@ -16,6 +16,10 @@ pub enum Error {
     AudioStreamBuild(#[from] cpal::BuildStreamError),
     #[error("Failed to load config: {0}")]
     Config(#[from] config::ConfigError),
+    #[error("Config write error: {0}")]
+    ConfigWriteError(#[from] toml::ser::Error),
+    #[error("Config read error: {0}")]
+    ConfigReadError(#[from] toml::de::Error),
     #[error("Environment variable error: {0}")]
     EnvVarError(#[from] std::env::VarError),
     #[error("Not a valid location: {0}")]

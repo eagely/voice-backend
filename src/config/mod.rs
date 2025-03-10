@@ -1,8 +1,9 @@
 use crate::error::Result;
 use config::{Config, Environment, File};
-use directories::ProjectDirs;
 use serde::Deserialize;
 use std::path::PathBuf;
+use tokio::fs;
+use toml::{to_string, Value};
 
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
@@ -14,7 +15,6 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub transcriber: TranscriberConfig,
     pub tts: TtsConfig,
-    pub user: UserConfig,
     pub weather: WeatherConfig,
 }
 
@@ -71,31 +71,24 @@ pub struct TtsConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct UserConfig {
-    pub default_location: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct WeatherConfig {
     pub base_url: String,
 }
 
 impl AppConfig {
-    fn get_config_files() -> Vec<PathBuf> {
-        let mut configs = Vec::new();
+    fn get_config_file() -> Option<PathBuf> {
+        std::env::var("XDG_CONFIG_HOME")
+            .ok()
+            .map(|xdg_config_home| PathBuf::from(xdg_config_home).join("voice/config.toml"))
+    }
 
-        #[cfg(unix)]
-        {
-            configs.push(PathBuf::from("/etc/voice/config.toml"));
+    fn create_default_config_file(config_path: &PathBuf) -> Result<()> {
+        let default_config = include_str!("default.toml");
+        if let Some(parent) = config_path.parent() {
+            std::fs::create_dir_all(parent)?;
         }
-
-        if let Some(proj_dirs) = ProjectDirs::from("dev", "eagely", "voice") {
-            configs.push(proj_dirs.config_dir().join("config.toml"));
-        }
-
-        configs.push(PathBuf::from("config/config.toml"));
-
-        configs
+        std::fs::write(config_path, default_config)?;
+        Ok(())
     }
 
     pub fn new() -> Result<Self> {
@@ -106,7 +99,10 @@ impl AppConfig {
             config::FileFormat::Toml,
         ));
 
-        for config_path in Self::get_config_files() {
+        if let Some(config_path) = Self::get_config_file() {
+            if !config_path.exists() {
+                Self::create_default_config_file(&config_path)?;
+            }
             builder = builder.add_source(File::from(config_path).required(false));
         }
 
@@ -114,5 +110,30 @@ impl AppConfig {
 
         let config = builder.build()?;
         Ok(config.try_deserialize()?)
+    }
+
+    pub async fn write_config(table: &str, key: &str, value: &str) -> Result<()> {
+        if let Some(config_path) = Self::get_config_file() {
+            let config_content = fs::read_to_string(&config_path).await?;
+            let mut config_value: Value = config_content.parse()?;
+
+            let table_value = config_value.get_mut(table).ok_or_else(|| {
+                crate::error::Error::Config(config::ConfigError::Message(format!(
+                    "Table not found: {}",
+                    table
+                )))
+            })?;
+
+            table_value[key] = Value::String(value.to_string());
+
+            let new_config_content = to_string(&config_value)?;
+            fs::write(config_path, new_config_content).await?;
+
+            Ok(())
+        } else {
+            Err(crate::error::Error::Config(config::ConfigError::Message(
+                "Configuration file path not found".to_string(),
+            )))
+        }
     }
 }
