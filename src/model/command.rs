@@ -1,7 +1,9 @@
+#[derive(Debug)]
 pub enum Command {
     Cancel,
     StartRecording,
     StopRecording,
+    Config(String),
     Unknown(String),
 }
 
@@ -13,10 +15,11 @@ impl From<String> for Command {
 
 impl From<&str> for Command {
     fn from(s: &str) -> Self {
-        match s.to_lowercase().trim() {
-            "cancel" => Self::Cancel,
-            "start_recording" => Self::StartRecording,
-            "stop_recording" => Self::StopRecording,
+        match s.trim() {
+            "AC" => Self::Cancel,
+            "AI" => Self::StartRecording,
+            "AT" => Self::StopRecording,
+            x if x.starts_with('C') => Command::Config(x.strip_prefix('C').unwrap().to_owned()),
             other => Command::Unknown(other.to_string()),
         }
     }

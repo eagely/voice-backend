@@ -160,7 +160,7 @@ mod tests {
         let run_command_result = kwin_client.run_command("zeditor").await;
         assert!(
             run_command_result.is_ok(),
-            "Failed to run co: zeditor"
+            "Failed to run command: zeditor"
         );
 
         Ok(())

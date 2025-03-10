@@ -27,8 +27,5 @@ use_gpu = true
 base_url = "http://localhost:5000"
 voice = "en_US-ljspeech-high.onnx"
 
-[user]
-default_location = "Vienna"
-
 [weather]
 base_url = "https://api.openweathermap.org/data/3.0/onecall"

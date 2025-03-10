@@ -1,4 +1,4 @@
-use crate::config::ResponseType;
+use crate::config::{AppConfig, ResponseType};
 use crate::error::Result;
 use crate::model::command::Command;
 use crate::service::runtime::RuntimeService;
@@ -6,10 +6,10 @@ use crate::service::tts::TtsService;
 use crate::service::{
     parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
 };
+use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
-use futures::{SinkExt, StreamExt};
 
 pub struct WsServer {
     listener: TcpListener,
@@ -19,6 +19,7 @@ pub struct WsServer {
     runtime: Box<dyn RuntimeService>,
     tts: Box<dyn TtsService>,
     response_type: Arc<ResponseType>,
+    config: Arc<AppConfig>,
 }
 
 impl WsServer {
@@ -30,6 +31,7 @@ impl WsServer {
         runtime: Box<dyn RuntimeService>,
         tts: Box<dyn TtsService>,
         response_type: Arc<ResponseType>,
+        config: Arc<AppConfig>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr).await?;
         Ok(Self {
@@ -40,6 +42,7 @@ impl WsServer {
             runtime,
             tts,
             response_type,
+            config,
         })
     }
 
@@ -55,8 +58,11 @@ impl WsServer {
 
         while let Some(msg) = ws_stream.next().await {
             let msg = msg?;
+            dbg!(&msg);
             if let Message::Text(line) = msg {
-                match line.as_str().into() {
+                let l: Command = line.as_str().into();
+                dbg!(&l);
+                match l {
                     Command::StartRecording => {
                         self.recorder.start()?;
                         recording_active = true;
@@ -98,8 +104,41 @@ impl WsServer {
                             ws_stream.send("Nothing to cancel.".into()).await?;
                         }
                     }
+                    Command::Config(config_str) => {
+                        if let Some((table_key, value)) = config_str.split_once('=') {
+                            let table_key = table_key.trim();
+                            let value = value.trim();
+
+                            if let Some((table, key)) = table_key.split_once('.') {
+                                match AppConfig::write_config(table.trim(), key.trim(), value).await
+                                {
+                                    Ok(_) => {
+                                        ws_stream.send("Configuration updated.".into()).await?;
+                                    }
+                                    Err(e) => {
+                                        ws_stream
+                                            .send(
+                                                format!("Error updating configuration: {}", e)
+                                                    .into(),
+                                            )
+                                            .await?;
+                                    }
+                                }
+                            } else {
+                                ws_stream
+                                    .send("Invalid format. Use table.key = value.".into())
+                                    .await?;
+                            }
+                        } else {
+                            ws_stream
+                                .send("Invalid format. Use table.key = value.".into())
+                                .await?;
+                        }
+                    }
                     Command::Unknown(command) => {
-                        ws_stream.send(format!("Unknown command: {}", command).into()).await?;
+                        ws_stream
+                            .send(format!("Unknown command: {}", command).into())
+                            .await?;
                     }
                 }
             }
