@@ -1,4 +1,4 @@
-use std::{fmt, time::Duration};
+use std::fmt;
 
 use serde::{
     de::{Error, Visitor},
@@ -42,6 +42,7 @@ pub enum IntentKind {
     MinimizeWindow,
     RunCommand,
     SetTimer,
+    ShowDesktop,
     SwitchWorkspace,
     WeatherQuery,
     Other(String),
@@ -71,6 +72,7 @@ impl<'de> Deserialize<'de> for IntentKind {
                     "maximize_window" => Ok(IntentKind::MaximizeWindow),
                     "minimize_window" => Ok(IntentKind::MinimizeWindow),
                     "set_timer" => Ok(IntentKind::SetTimer),
+                    "show_desktop" => Ok(IntentKind::ShowDesktop),
                     "switch_workspace" => Ok(IntentKind::SwitchWorkspace),
                     "weather_query" => Ok(IntentKind::WeatherQuery),
                     _ => Ok(IntentKind::Other(value.to_owned())),
@@ -110,13 +112,6 @@ impl Entity {
             entity: entity.into(),
             value,
             confidence,
-        }
-    }
-
-    pub fn get_duration(&self) -> Option<Duration> {
-        match &self.value {
-            EntityValue::Duration(d) => Some(Duration::from_secs(d.value)),
-            _ => None,
         }
     }
 }

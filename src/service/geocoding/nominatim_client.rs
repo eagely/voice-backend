@@ -1,9 +1,8 @@
+use super::geocoding_service::GeocodingService;
 use crate::{error::Result, model::geocode::GeocodeResponse};
 use async_trait::async_trait;
 use reqwest::{header, Client};
 use url::Url;
-
-use super::geocoding_service::GeocodingService;
 
 pub struct NominatimClient {
     client: Client,
@@ -11,11 +10,11 @@ pub struct NominatimClient {
 }
 
 impl NominatimClient {
-    pub fn new(base_url: impl Into<String>) -> Result<Self> {
+    pub fn new(base_url: impl Into<String>, user_agent: &str) -> Result<Self> {
         let mut headers = header::HeaderMap::new();
         headers.insert(
             header::USER_AGENT,
-            header::HeaderValue::from_str("eagely's Voice Assistant/1.0")?,
+            header::HeaderValue::from_str(user_agent)?,
         );
         Ok(Self {
             client: Client::builder().default_headers(headers).build()?,
@@ -50,7 +49,7 @@ mod tests {
     async fn test_nominatim_client() -> Result<()> {
         let config = Arc::new(AppConfig::new()?);
 
-        let client = NominatimClient::new(&config.geocoding.base_url)?;
+        let client = NominatimClient::new(&config.geocoding.base_url, &config.geocoding.user_agent)?;
 
         let address = "Vienna";
         let response = client.request(address).await?;

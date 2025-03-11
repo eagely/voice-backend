@@ -1,4 +1,4 @@
-use crate::config::{AppConfig, ResponseType};
+use crate::config::{enums::ResponseKind, AppConfig};
 use crate::error::Result;
 use crate::model::command::Command;
 use crate::service::runtime::RuntimeService;
@@ -18,8 +18,7 @@ pub struct WsServer {
     parser: Box<dyn ParsingService>,
     runtime: Box<dyn RuntimeService>,
     tts: Box<dyn TtsService>,
-    response_type: Arc<ResponseType>,
-    config: Arc<AppConfig>,
+    response_kind: Arc<ResponseKind>,
 }
 
 impl WsServer {
@@ -30,8 +29,7 @@ impl WsServer {
         parser: Box<dyn ParsingService>,
         runtime: Box<dyn RuntimeService>,
         tts: Box<dyn TtsService>,
-        response_type: Arc<ResponseType>,
-        config: Arc<AppConfig>,
+        response_kind: Arc<ResponseKind>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr).await?;
         Ok(Self {
@@ -41,8 +39,7 @@ impl WsServer {
             parser,
             runtime,
             tts,
-            response_type,
-            config,
+            response_kind,
         })
     }
 
@@ -77,11 +74,11 @@ impl WsServer {
                             let mut output_stream = self.runtime.run(action).await?;
                             while let Some(output) = output_stream.next().await {
                                 match output {
-                                    Ok(text) => match &*self.response_type {
-                                        ResponseType::Text => {
+                                    Ok(text) => match &*self.response_kind {
+                                        ResponseKind::Text => {
                                             ws_stream.send(text.into()).await?;
                                         }
-                                        ResponseType::Audio => {
+                                        ResponseKind::Audio => {
                                             let audio = self.tts.synthesize(&text).await?;
                                             ws_stream.send(Message::Binary(audio)).await?;
                                         }
