@@ -115,6 +115,10 @@ impl RuntimeService for LocalRuntime {
 
                 Self::string_stream(response)
             }
+            IntentKind::ShowDesktop => {
+                self.workspace_service.show_desktop().await?;
+                Self::string_stream("Desktop shown.")
+            }
             IntentKind::SwitchWorkspace => {
                 let workspace_entity = action
                     .entities

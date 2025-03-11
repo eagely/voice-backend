@@ -1,19 +1,23 @@
 [geocoding]
 base_url = "https://nominatim.openstreetmap.org/search"
 user_agent = "eagely's Voice Assistant/1.0"
+implementation = "nominatim"
 
 [llm]
 base_url = "http://localhost:11434"
 model = "deepseek-r1:7b"
+implementation = "ollama"
 
-[rasa]
-base_url = "http://localhost:5005"
+[parser]
+rasa_base_url = "http://localhost:5005"
+implementation = "rasa"
 
 [recorder]
 device_name = "pipewire"
+implementation = "local"
 
 [response]
-response_type = "text"
+ResponseKind = "text"
 
 [server]
 host = "127.0.0.1"
@@ -22,10 +26,13 @@ port = 8080
 [transcriber]
 model_path = "base.bin"
 use_gpu = true
+implementation = "local"
 
 [tts]
 base_url = "http://localhost:5000"
 voice = "en_US-ljspeech-high.onnx"
+implementation = "piper"
 
 [weather]
 base_url = "https://api.openweathermap.org/data/3.0/onecall"
+implementation = "openweathermap"
