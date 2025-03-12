@@ -15,6 +15,7 @@ implementation = "rasa"
 [recorder]
 device_name = "pipewire"
 implementation = "local"
+remote_url = "ws://localhost:5555"
 
 [response]
 ResponseKind = "text"

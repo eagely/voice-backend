@@ -7,7 +7,8 @@ mod service;
 use crate::error::Result;
 use config::{
     enums::{
-        GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation, TranscriberImplementation, TtsImplementation, WeatherImplementation
+        GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation,
+        TranscriberImplementation, TtsImplementation, WeatherImplementation,
     },
     AppConfig,
 };
@@ -16,7 +17,7 @@ use service::{
     geocoding::{GeocodingService, NominatimClient},
     llm::{LlmService, OllamaClient},
     parsing::{ParsingService, PatternMatchParser, RasaClient},
-    recording::{LocalRecorder, RecordingService},
+    recording::{remote_recorder::RemoteRecorder, LocalRecorder, RecordingService},
     runtime::LocalRuntime,
     timer::memory_timer::MemoryTimer,
     transcription::{LocalWhisperTranscriber, TranscriptionService},
@@ -33,6 +34,9 @@ async fn main() -> Result<()> {
     let recorder: Box<dyn RecordingService> = match config.recorder.implementation {
         RecorderImplementation::Local => {
             Box::new(LocalRecorder::new(&config.recorder.device_name)?)
+        }
+        RecorderImplementation::Remote => {
+            Box::new(RemoteRecorder::new(&config.recorder.remote_url).await?)
         }
     };
 

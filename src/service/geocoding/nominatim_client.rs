@@ -49,7 +49,8 @@ mod tests {
     async fn test_nominatim_client() -> Result<()> {
         let config = Arc::new(AppConfig::new()?);
 
-        let client = NominatimClient::new(&config.geocoding.base_url, &config.geocoding.user_agent)?;
+        let client =
+            NominatimClient::new(&config.geocoding.base_url, &config.geocoding.user_agent)?;
 
         let address = "Vienna";
         let response = client.request(address).await?;

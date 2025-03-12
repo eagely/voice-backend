@@ -1,11 +1,13 @@
+use super::enums::{
+    GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation,
+    ResponseKind, TranscriberImplementation, TtsImplementation, WeatherImplementation,
+};
 use crate::error::Result;
 use config::{Config, Environment, File};
 use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::fs;
 use toml::{to_string, Value};
-
-use super::enums::{GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation, ResponseKind, TranscriberImplementation, TtsImplementation, WeatherImplementation};
 
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
@@ -44,6 +46,7 @@ pub struct ParserConfig {
 pub struct RecorderConfig {
     pub device_name: String,
     pub implementation: RecorderImplementation,
+    pub remote_url: String,
 }
 
 #[derive(Debug, Deserialize)]
