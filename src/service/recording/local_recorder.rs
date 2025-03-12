@@ -3,7 +3,7 @@ use crate::error::{Error, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Device;
+use cpal::{default_host, BufferSize, Device, InputCallbackInfo, SampleRate, Stream, StreamConfig};
 use hound::{WavSpec, WavWriter};
 use ringbuf::traits::{Consumer, RingBuffer};
 use ringbuf::HeapRb;
@@ -20,7 +20,7 @@ unsafe impl<T> Sync for UnsafeSendSync<T> {}
 unsafe impl<T> Send for UnsafeSendSync<T> {}
 
 pub struct LocalRecorder {
-    stream: UnsafeSendSync<cpal::Stream>,
+    stream: UnsafeSendSync<Stream>,
     buffer: Arc<Mutex<HeapRb<f32>>>,
     total_written: Arc<AtomicUsize>,
     start_index: Arc<Mutex<Option<usize>>>,
@@ -29,21 +29,21 @@ pub struct LocalRecorder {
 impl LocalRecorder {
     pub fn new(device_name: impl Into<String>) -> Result<Self> {
         let device_name = device_name.into();
-        let host = cpal::default_host();
+        let host = default_host();
 
         let device = host
             .input_devices()?
-            .find(|d| d.name().map(|n| n == device_name).unwrap_or(false))
+            .find(|d| d.name().is_ok_and(|n| n == device_name))
             .ok_or(Error::AudioInputDeviceNotFound(device_name))?;
 
         Self::set_up_recorder(device)
     }
 
     fn set_up_recorder(device: Device) -> Result<Self> {
-        let config = cpal::StreamConfig {
+        let config = StreamConfig {
             channels: CHANNELS,
-            sample_rate: cpal::SampleRate(SAMPLE_RATE),
-            buffer_size: cpal::BufferSize::Default,
+            sample_rate: SampleRate(SAMPLE_RATE),
+            buffer_size: BufferSize::Default,
         };
 
         let rb = Arc::new(Mutex::new(HeapRb::<f32>::new(RB_CAPACITY)));
@@ -54,7 +54,7 @@ impl LocalRecorder {
         let total_written_clone = total_written.clone();
         let stream = device.build_input_stream(
             &config,
-            move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            move |data: &[f32], _: &InputCallbackInfo| {
                 if let Ok(mut rb) = rb_clone.lock() {
                     for &sample in data {
                         rb.push_overwrite(sample);
