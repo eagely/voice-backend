@@ -61,13 +61,13 @@ impl WsServer {
                 dbg!(&l);
                 match l {
                     Command::StartRecording => {
-                        self.recorder.start()?;
+                        self.recorder.start().await?;
                         recording_active = true;
                         ws_stream.send("Recording started.".into()).await?;
                     }
                     Command::StopRecording => {
                         if recording_active {
-                            let audio = self.recorder.stop()?;
+                            let audio = self.recorder.stop().await?;
                             recording_active = false;
                             let transcription = self.transcriber.transcribe(&audio).await?;
                             let action = self.parser.parse(&transcription).await?;
@@ -94,7 +94,7 @@ impl WsServer {
                     }
                     Command::Cancel => {
                         if recording_active {
-                            let _ = self.recorder.stop()?;
+                            let _ = self.recorder.stop().await?;
                             recording_active = false;
                             ws_stream.send("Recording canceled.".into()).await?;
                         } else {

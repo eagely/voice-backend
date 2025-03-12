@@ -23,6 +23,7 @@ pub enum ParserImplementation {
 #[serde(rename_all = "lowercase")]
 pub enum RecorderImplementation {
     Local,
+    Remote,
 }
 
 #[derive(Debug, Deserialize)]
