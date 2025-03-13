@@ -12,6 +12,8 @@ pub enum Error {
     AudioInputDevices(#[from] cpal::DevicesError),
     #[error("Audio Processing Error: {0}")]
     AudioProcessing(#[from] hound::Error),
+    #[error("Audio stream error: {0}")]
+    AudioStreamError(#[from] cpal::StreamError),
     #[error("Request error: {0}")]
     AudioStreamBuild(#[from] cpal::BuildStreamError),
     #[error("Failed to load config: {0}")]
