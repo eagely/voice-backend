@@ -31,8 +31,10 @@ pub struct GeocodingConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct LlmConfig {
-    pub base_url: String,
-    pub model: String,
+    pub ollama_base_url: String,
+    pub deepseek_base_url: String,
+    pub deepseek_model: String,
+    pub ollama_model: String,
     pub implementation: LlmImplementation,
 }
 
@@ -123,7 +125,7 @@ impl AppConfig {
             let mut config_value: Value = config_content.parse()?;
 
             let table_value = config_value.get_mut(table).ok_or_else(|| {
-                crate::error::Error::Config(config::ConfigError::Message(format!(
+                crate::error::Error::ConfigError(config::ConfigError::Message(format!(
                     "Table not found: {}",
                     table
                 )))
@@ -136,7 +138,7 @@ impl AppConfig {
 
             Ok(())
         } else {
-            Err(crate::error::Error::Config(config::ConfigError::Message(
+            Err(crate::error::Error::ConfigError(config::ConfigError::Message(
                 "Configuration file path not found".to_string(),
             )))
         }

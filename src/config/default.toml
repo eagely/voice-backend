@@ -4,13 +4,15 @@ user_agent = "eagely's Voice Assistant/1.0"
 implementation = "nominatim"
 
 [llm]
-base_url = "http://localhost:11434"
-model = "deepseek-r1:7b"
-implementation = "ollama"
+deepseek_base_url = "https://api.deepseek.com"
+ollama_base_url = "http://localhost:11434"
+deepseek_model = "deepseek-chat"
+ollama_model = "deepseek-r1:7b"
+implementation = "deepseek"
 
 [parser]
 rasa_base_url = "http://localhost:5005"
-implementation = "rasa"
+implementation = "patternmatch"
 
 [recorder]
 device_name = "pipewire"

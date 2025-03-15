@@ -15,7 +15,7 @@ use config::{
 use server::ws::WsServer;
 use service::{
     geocoding::{GeocodingService, NominatimClient},
-    llm::{LlmService, OllamaClient},
+    llm::{deepseek_client::DeepSeekClient, LlmService, OllamaClient},
     parsing::{ParsingService, PatternMatchParser, RasaClient},
     recording::{remote_recorder::RemoteRecorder, LocalRecorder, RecordingService},
     runtime::LocalRuntime,
@@ -55,8 +55,11 @@ async fn main() -> Result<()> {
     };
 
     let llm_service: Arc<dyn LlmService> = match config.llm.implementation {
+        LlmImplementation::DeepSeek => {
+            Arc::new(DeepSeekClient::new(&config.llm.deepseek_model, &config.llm.deepseek_base_url)?)
+        }
         LlmImplementation::Ollama => {
-            Arc::new(OllamaClient::new(&config.llm.model, &config.llm.base_url)?)
+            Arc::new(OllamaClient::new(&config.llm.ollama_model, &config.llm.ollama_base_url)?)
         }
     };
 
