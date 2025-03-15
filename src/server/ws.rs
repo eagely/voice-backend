@@ -55,10 +55,8 @@ impl WsServer {
 
         while let Some(msg) = ws_stream.next().await {
             let msg = msg?;
-            dbg!(&msg);
             if let Message::Text(line) = msg {
                 let l: Command = line.as_str().into();
-                dbg!(&l);
                 match l {
                     Command::StartRecording => {
                         self.recorder.start().await?;

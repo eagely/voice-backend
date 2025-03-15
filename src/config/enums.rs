@@ -9,6 +9,7 @@ pub enum GeocodingImplementation {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LlmImplementation {
+    DeepSeek,
     Ollama,
 }
 

@@ -17,7 +17,7 @@ pub enum Error {
     #[error("Request error: {0}")]
     AudioStreamBuild(#[from] cpal::BuildStreamError),
     #[error("Failed to load config: {0}")]
-    Config(#[from] config::ConfigError),
+    ConfigError(#[from] config::ConfigError),
     #[error("Config write error: {0}")]
     ConfigWriteError(#[from] toml::ser::Error),
     #[error("Config read error: {0}")]

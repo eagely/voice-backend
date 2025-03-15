@@ -1,3 +1,4 @@
+pub mod deepseek_client;
 pub mod llm_service;
 pub mod ollama_client;
 
