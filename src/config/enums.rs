@@ -30,6 +30,7 @@ pub enum RecorderImplementation {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TranscriberImplementation {
+    Deepgram,
     Local,
 }
 

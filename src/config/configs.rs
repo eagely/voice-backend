@@ -64,8 +64,9 @@ pub struct ServerConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct TranscriberConfig {
-    pub model_path: String,
-    pub use_gpu: bool,
+    pub deepgram_base_url: String,
+    pub local_model_path: String,
+    pub local_use_gpu: bool,
     pub implementation: TranscriberImplementation,
 }
 
