@@ -20,7 +20,7 @@ use service::{
     recording::{remote_recorder::RemoteRecorder, LocalRecorder, RecordingService},
     runtime::LocalRuntime,
     timer::memory_timer::MemoryTimer,
-    transcription::{LocalWhisperTranscriber, TranscriptionService},
+    transcription::{deepgram_client::DeepgramTranscriber, LocalWhisperTranscriber, TranscriptionService},
     tts::{PiperClient, TtsService},
     weather::{OpenWeatherMapClient, WeatherService},
     workspace::KWinClient,
@@ -41,9 +41,12 @@ async fn main() -> Result<()> {
     };
 
     let transcriber: Box<dyn TranscriptionService> = match config.transcriber.implementation {
+        TranscriberImplementation::Deepgram => Box::new(DeepgramTranscriber::new(
+            &config.transcriber.deepgram_base_url
+        )?),
         TranscriberImplementation::Local => Box::new(LocalWhisperTranscriber::new(
-            &config.transcriber.model_path,
-            config.transcriber.use_gpu,
+            &config.transcriber.local_model_path,
+            config.transcriber.local_use_gpu,
         )?),
     };
 

@@ -61,7 +61,6 @@ impl WsServer {
                     Command::StartRecording => {
                         self.recorder.start().await?;
                         recording_active = true;
-                        ws_stream.send("Recording started.".into()).await?;
                     }
                     Command::StopRecording => {
                         if recording_active {

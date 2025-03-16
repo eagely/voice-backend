@@ -1,3 +1,4 @@
+pub mod deepgram_client;
 pub mod local_whisper_transcriber;
 pub mod transcription_service;
 
