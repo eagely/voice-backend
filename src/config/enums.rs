@@ -15,28 +15,28 @@ pub enum LlmImplementation {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum ParserImplementation {
+pub enum ParsingImplementation {
     PatternMatch,
     Rasa,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum RecorderImplementation {
+pub enum RecordingImplementation {
     Local,
     Remote,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum TranscriberImplementation {
+pub enum TranscriptionImplementation {
     Deepgram,
     Local,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum SynthesizerImplementation {
+pub enum SynthesisImplementation {
     Piper,
 }
 

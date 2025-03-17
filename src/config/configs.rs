@@ -1,6 +1,6 @@
 use super::enums::{
-    GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation,
-    ResponseKind, SynthesizerImplementation, TranscriberImplementation, WeatherImplementation,
+    GeocodingImplementation, LlmImplementation, ParsingImplementation, RecordingImplementation,
+    ResponseKind, SynthesisImplementation, TranscriptionImplementation, WeatherImplementation,
 };
 use crate::error::Result;
 use config::{Config, Environment, File};
@@ -13,12 +13,12 @@ use toml::{to_string, Value};
 pub struct AppConfig {
     pub geocoding: GeocodingConfig,
     pub llm: LlmConfig,
-    pub parser: ParserConfig,
-    pub recorder: RecorderConfig,
+    pub parser: ParsingConfig,
+    pub recorder: RecordingConfig,
     pub response: ResponseConfig,
     pub server: ServerConfig,
-    pub transcriber: TranscriberConfig,
-    pub synthesizer: SynthesizerConfig,
+    pub transcriber: TranscriptionConfig,
+    pub synthesizer: SynthesisConfig,
     pub weather: WeatherConfig,
 }
 
@@ -39,15 +39,15 @@ pub struct LlmConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ParserConfig {
+pub struct ParsingConfig {
     pub rasa_base_url: String,
-    pub implementation: ParserImplementation,
+    pub implementation: ParsingImplementation,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct RecorderConfig {
+pub struct RecordingConfig {
     pub device_name: String,
-    pub implementation: RecorderImplementation,
+    pub implementation: RecordingImplementation,
     pub remote_url: String,
 }
 
@@ -63,18 +63,18 @@ pub struct ServerConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TranscriberConfig {
+pub struct TranscriptionConfig {
     pub deepgram_base_url: String,
     pub local_model_path: String,
     pub local_use_gpu: bool,
-    pub implementation: TranscriberImplementation,
+    pub implementation: TranscriptionImplementation,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SynthesizerConfig {
+pub struct SynthesisConfig {
     pub base_url: String,
     pub voice: String,
-    pub implementation: SynthesizerImplementation,
+    pub implementation: SynthesisImplementation,
 }
 
 #[derive(Debug, Deserialize)]
