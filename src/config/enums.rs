@@ -36,7 +36,7 @@ pub enum TranscriberImplementation {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum TtsImplementation {
+pub enum SynthesizerImplementation {
     Piper,
 }
 

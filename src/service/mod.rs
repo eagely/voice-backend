@@ -5,6 +5,6 @@ pub mod recording;
 pub mod runtime;
 pub mod timer;
 pub mod transcription;
-pub mod tts;
+pub mod synthesis;
 pub mod weather;
 pub mod workspace;

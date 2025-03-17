@@ -1,4 +1,4 @@
-use super::tts_service::TtsService;
+use super::synthesizer_service::SynthesizerService;
 use crate::error::{Error::ApiError, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
@@ -23,9 +23,9 @@ impl PiperClient {
 }
 
 #[async_trait]
-impl TtsService for PiperClient {
+impl SynthesizerService for PiperClient {
     async fn synthesize(&self, text: &str) -> Result<Bytes> {
-        let url = self.base_url.join("api/tts")?;
+        let url = self.base_url.join("api/synthesizer")?;
 
         let request_body = json!({
             "text": text,

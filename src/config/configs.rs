@@ -1,6 +1,6 @@
 use super::enums::{
     GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation,
-    ResponseKind, TranscriberImplementation, TtsImplementation, WeatherImplementation,
+    ResponseKind, SynthesizerImplementation, TranscriberImplementation, WeatherImplementation,
 };
 use crate::error::Result;
 use config::{Config, Environment, File};
@@ -18,7 +18,7 @@ pub struct AppConfig {
     pub response: ResponseConfig,
     pub server: ServerConfig,
     pub transcriber: TranscriberConfig,
-    pub tts: TtsConfig,
+    pub synthesizer: SynthesizerConfig,
     pub weather: WeatherConfig,
 }
 
@@ -71,10 +71,10 @@ pub struct TranscriberConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TtsConfig {
+pub struct SynthesizerConfig {
     pub base_url: String,
     pub voice: String,
-    pub implementation: TtsImplementation,
+    pub implementation: SynthesizerImplementation,
 }
 
 #[derive(Debug, Deserialize)]
@@ -139,9 +139,9 @@ impl AppConfig {
 
             Ok(())
         } else {
-            Err(crate::error::Error::ConfigError(config::ConfigError::Message(
-                "Configuration file path not found".to_string(),
-            )))
+            Err(crate::error::Error::ConfigError(
+                config::ConfigError::Message("Configuration file path not found".to_string()),
+            ))
         }
     }
 }

@@ -8,7 +8,7 @@ use crate::error::Result;
 use config::{
     enums::{
         GeocodingImplementation, LlmImplementation, ParserImplementation, RecorderImplementation,
-        TranscriberImplementation, TtsImplementation, WeatherImplementation,
+        SynthesizerImplementation, TranscriberImplementation, WeatherImplementation,
     },
     AppConfig,
 };
@@ -19,9 +19,9 @@ use service::{
     parsing::{ParsingService, PatternMatchParser, RasaClient},
     recording::{remote_recorder::RemoteRecorder, LocalRecorder, RecordingService},
     runtime::LocalRuntime,
+    synthesis::{PiperClient, SynthesizerService},
     timer::memory_timer::MemoryTimer,
-    transcription::{deepgram_client::DeepgramTranscriber, LocalWhisperTranscriber, TranscriptionService},
-    tts::{PiperClient, TtsService},
+    transcription::{DeepgramClient, LocalWhisperClient, TranscriptionService},
     weather::{OpenWeatherMapClient, WeatherService},
     workspace::KWinClient,
 };
@@ -41,10 +41,10 @@ async fn main() -> Result<()> {
     };
 
     let transcriber: Box<dyn TranscriptionService> = match config.transcriber.implementation {
-        TranscriberImplementation::Deepgram => Box::new(DeepgramTranscriber::new(
-            &config.transcriber.deepgram_base_url
-        )?),
-        TranscriberImplementation::Local => Box::new(LocalWhisperTranscriber::new(
+        TranscriberImplementation::Deepgram => {
+            Box::new(DeepgramClient::new(&config.transcriber.deepgram_base_url)?)
+        }
+        TranscriberImplementation::Local => Box::new(LocalWhisperClient::new(
             &config.transcriber.local_model_path,
             config.transcriber.local_use_gpu,
         )?),
@@ -58,12 +58,14 @@ async fn main() -> Result<()> {
     };
 
     let llm_service: Arc<dyn LlmService> = match config.llm.implementation {
-        LlmImplementation::DeepSeek => {
-            Arc::new(DeepSeekClient::new(&config.llm.deepseek_model, &config.llm.deepseek_base_url)?)
-        }
-        LlmImplementation::Ollama => {
-            Arc::new(OllamaClient::new(&config.llm.ollama_model, &config.llm.ollama_base_url)?)
-        }
+        LlmImplementation::DeepSeek => Arc::new(DeepSeekClient::new(
+            &config.llm.deepseek_model,
+            &config.llm.deepseek_base_url,
+        )?),
+        LlmImplementation::Ollama => Arc::new(OllamaClient::new(
+            &config.llm.ollama_model,
+            &config.llm.ollama_base_url,
+        )?),
     };
 
     let weather_service: Arc<dyn WeatherService> = match config.weather.implementation {
@@ -90,10 +92,11 @@ async fn main() -> Result<()> {
         workspace_service,
     ));
 
-    let tts_service: Box<dyn TtsService> = match config.tts.implementation {
-        TtsImplementation::Piper => {
-            Box::new(PiperClient::new(&config.tts.base_url, &config.tts.voice)?)
-        }
+    let synthesizer_service: Box<dyn SynthesizerService> = match config.synthesizer.implementation {
+        SynthesizerImplementation::Piper => Box::new(PiperClient::new(
+            &config.synthesizer.base_url,
+            &config.synthesizer.voice,
+        )?),
     };
 
     let server = WsServer::new(
@@ -102,7 +105,7 @@ async fn main() -> Result<()> {
         transcriber,
         parsing_service,
         runtime_service,
-        tts_service,
+        synthesizer_service,
         Arc::new(config.response.response_type.clone()),
     )
     .await?;
