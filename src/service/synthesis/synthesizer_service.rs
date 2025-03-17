@@ -3,6 +3,6 @@ use async_trait::async_trait;
 use bytes::Bytes;
 
 #[async_trait]
-pub trait TtsService: Send + Sync {
+pub trait SynthesizerService: Send + Sync {
     async fn synthesize(&self, text: &str) -> Result<Bytes>;
 }

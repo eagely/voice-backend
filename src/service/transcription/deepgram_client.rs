@@ -6,13 +6,13 @@ use reqwest::Client;
 use serde_json::Value;
 use url::Url;
 
-pub struct DeepgramTranscriber {
+pub struct DeepgramClient {
     client: Client,
     api_key: String,
     base_url: Url,
 }
 
-impl DeepgramTranscriber {
+impl DeepgramClient {
     pub fn new(base_url: &str) -> Result<Self> {
         let api_key = std::env::var("DEEPGRAM_API_KEY")?;
         Ok(Self {
@@ -24,7 +24,7 @@ impl DeepgramTranscriber {
 }
 
 #[async_trait]
-impl TranscriptionService for DeepgramTranscriber {
+impl TranscriptionService for DeepgramClient {
     async fn transcribe(&self, audio: &Bytes) -> Result<String> {
         let mut url = self.base_url.join("listen")?;
         {

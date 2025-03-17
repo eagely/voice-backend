@@ -8,7 +8,7 @@ deepseek_base_url = "https://api.deepseek.com/"
 ollama_base_url = "http://localhost:11434/"
 deepseek_model = "deepseek-chat"
 ollama_model = "deepseek-r1:7b"
-implementation = "deepseek"
+implementation = "ollama"
 
 [parser]
 rasa_base_url = "http://localhost:5005/"
@@ -32,7 +32,7 @@ local_use_gpu = true
 deepgram_base_url = "https://api.deepgram.com/v1/"
 implementation = "local"
 
-[tts]
+[synthesizer]
 base_url = "http://localhost:5000/"
 voice = "en_US-ljspeech-high.onnx"
 implementation = "piper"

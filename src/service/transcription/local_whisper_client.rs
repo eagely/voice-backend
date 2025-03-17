@@ -1,17 +1,16 @@
-use std::{io::Cursor, sync::Arc};
-
 use super::transcription_service::TranscriptionService;
 use crate::error::{Error, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
 use hound::WavReader;
+use std::{io::Cursor, sync::Arc};
 use whisper_rs::{FullParams, WhisperContext, WhisperContextParameters};
 
-pub struct LocalWhisperTranscriber {
+pub struct LocalWhisperClient {
     pub context: Arc<WhisperContext>,
 }
 
-impl LocalWhisperTranscriber {
+impl LocalWhisperClient {
     pub fn new(model: impl Into<String>, use_gpu: bool) -> Result<Self> {
         let mut params = WhisperContextParameters::default();
         params.use_gpu = use_gpu;
@@ -21,14 +20,16 @@ impl LocalWhisperTranscriber {
 }
 
 #[async_trait]
-impl TranscriptionService for LocalWhisperTranscriber {
+impl TranscriptionService for LocalWhisperClient {
     async fn transcribe(&self, audio: &Bytes) -> Result<String> {
         let cursor = Cursor::new(audio);
         let mut reader = WavReader::new(cursor)?;
 
         let spec = reader.spec();
         if spec.channels != 1 || spec.sample_rate != 16000 {
-            return Err(Error::AudioCodec("WAV file must be mono and have a sample rate of 16000 Hz".to_string()));
+            return Err(Error::AudioCodec(
+                "WAV file must be mono and have a sample rate of 16000 Hz".to_string(),
+            ));
         }
 
         let samples: Vec<f32> = reader

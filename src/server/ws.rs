@@ -2,7 +2,7 @@ use crate::config::{enums::ResponseKind, AppConfig};
 use crate::error::Result;
 use crate::model::command::Command;
 use crate::service::runtime::RuntimeService;
-use crate::service::tts::TtsService;
+use crate::service::synthesis::SynthesizerService;
 use crate::service::{
     parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
 };
@@ -17,7 +17,7 @@ pub struct WsServer {
     transcriber: Box<dyn TranscriptionService>,
     parser: Box<dyn ParsingService>,
     runtime: Box<dyn RuntimeService>,
-    tts: Box<dyn TtsService>,
+    synthesizer: Box<dyn SynthesizerService>,
     response_kind: Arc<ResponseKind>,
 }
 
@@ -28,7 +28,7 @@ impl WsServer {
         transcriber: Box<dyn TranscriptionService>,
         parser: Box<dyn ParsingService>,
         runtime: Box<dyn RuntimeService>,
-        tts: Box<dyn TtsService>,
+        synthesizer: Box<dyn SynthesizerService>,
         response_kind: Arc<ResponseKind>,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr).await?;
@@ -38,7 +38,7 @@ impl WsServer {
             transcriber,
             parser,
             runtime,
-            tts,
+            synthesizer,
             response_kind,
         })
     }
@@ -76,7 +76,7 @@ impl WsServer {
                                             ws_stream.send(text.into()).await?;
                                         }
                                         ResponseKind::Audio => {
-                                            let audio = self.tts.synthesize(&text).await?;
+                                            let audio = self.synthesizer.synthesize(&text).await?;
                                             ws_stream.send(Message::Binary(audio)).await?;
                                         }
                                     },
