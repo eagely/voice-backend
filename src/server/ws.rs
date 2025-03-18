@@ -7,7 +7,6 @@ use crate::service::{
     parsing::ParsingService, recording::RecordingService, transcription::TranscriptionService,
 };
 use futures::{SinkExt, StreamExt};
-use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 
@@ -18,7 +17,7 @@ pub struct WsServer {
     parser: Box<dyn ParsingService>,
     runtime: Box<dyn RuntimeService>,
     synthesizer: Box<dyn SynthesizerService>,
-    response_kind: Arc<ResponseKind>,
+    response_kind: ResponseKind,
 }
 
 impl WsServer {
@@ -29,7 +28,7 @@ impl WsServer {
         parser: Box<dyn ParsingService>,
         runtime: Box<dyn RuntimeService>,
         synthesizer: Box<dyn SynthesizerService>,
-        response_kind: Arc<ResponseKind>,
+        response_kind: ResponseKind,
     ) -> Result<Self> {
         let listener = TcpListener::bind(addr).await?;
         Ok(Self {
@@ -69,19 +68,16 @@ impl WsServer {
                             let transcription = self.transcriber.transcribe(&audio).await?;
                             let action = self.parser.parse(&transcription).await?;
                             let mut output_stream = self.runtime.run(action).await?;
-                            while let Some(output) = output_stream.next().await {
-                                match output {
-                                    Ok(text) => match &*self.response_kind {
-                                        ResponseKind::Text => {
-                                            ws_stream.send(text.into()).await?;
-                                        }
-                                        ResponseKind::Audio => {
-                                            let audio = self.synthesizer.synthesize(&text).await?;
-                                            ws_stream.send(Message::Binary(audio)).await?;
-                                        }
-                                    },
-                                    Err(e) => {
-                                        ws_stream.send(format!("Error: {}", e).into()).await?;
+                            match &self.response_kind {
+                                ResponseKind::Text => {
+                                    while let Some(text) = output_stream.next().await {
+                                        ws_stream.send(Message::Text(text?.into())).await?;
+                                    }
+                                }
+                                ResponseKind::Audio => {
+                                    let mut audio_stream = self.synthesizer.synthesize(output_stream).await?;
+                                    while let Some(audio) = audio_stream.next().await {
+                                        ws_stream.send(Message::Binary(audio?)).await?;
                                     }
                                 }
                             }

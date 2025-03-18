@@ -72,8 +72,11 @@ pub struct TranscriptionConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct SynthesisConfig {
-    pub base_url: String,
-    pub voice: String,
+    pub elevenlabs_base_url: String,
+    pub elevenlabs_model_id: String,
+    pub elevenlabs_voice_id: String,
+    pub piper_base_url: String,
+    pub piper_voice: String,
     pub implementation: SynthesisImplementation,
 }
 

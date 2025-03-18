@@ -4,27 +4,27 @@ use thiserror::Error;
 pub enum Error {
     #[error("API error: {0}")]
     ApiError(String),
-    #[error("Codec error: {0}")]
+    #[error("Audio Codec error: {0}")]
     AudioCodec(String),
-    #[error("Input device with the name {0} not found.")]
+    #[error("Audio input device with the name {0} not found.")]
     AudioInputDeviceNotFound(String),
-    #[error("Devices Error: {0}")]
+    #[error("Audio input devices error: {0}")]
     AudioInputDevices(#[from] cpal::DevicesError),
-    #[error("Audio Processing Error: {0}")]
+    #[error("Audio processing error: {0}")]
     AudioProcessing(#[from] hound::Error),
+    #[error("Audio stream build error: {0}")]
+    AudioStreamBuild(#[from] cpal::BuildStreamError),
     #[error("Audio stream error: {0}")]
     AudioStreamError(#[from] cpal::StreamError),
-    #[error("Request error: {0}")]
-    AudioStreamBuild(#[from] cpal::BuildStreamError),
-    #[error("Failed to load config: {0}")]
+    #[error("Config error: {0}")]
     ConfigError(#[from] config::ConfigError),
-    #[error("Config write error: {0}")]
-    ConfigWriteError(#[from] toml::ser::Error),
     #[error("Config read error: {0}")]
     ConfigReadError(#[from] toml::de::Error),
+    #[error("Config write error: {0}")]
+    ConfigWriteError(#[from] toml::ser::Error),
     #[error("Environment variable error: {0}")]
     EnvVarError(#[from] std::env::VarError),
-    #[error("Not a valid location: {0}")]
+    #[error("Geocoding error: {0}")]
     GeocodingError(String),
     #[error("Invalid header value: {0}")]
     InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
@@ -36,11 +36,11 @@ pub enum Error {
     Lock(String),
     #[error("Notification error: {0}")]
     NotificationError(#[from] notify_rust::error::Error),
-    #[error("Failed to pause stream: {0}")]
+    #[error("Pause audio stream error: {0}")]
     PauseAudioStream(#[from] cpal::PauseStreamError),
-    #[error("Failed to play stream: {0}")]
+    #[error("Play audio stream error: {0}")]
     PlayAudioStream(#[from] cpal::PlayStreamError),
-    #[error("Request failed: {0}")]
+    #[error("Request error: {0}")]
     RequestError(#[from] reqwest::Error),
     #[error("Url parse error: {0}")]
     UrlParseError(#[from] url::ParseError),

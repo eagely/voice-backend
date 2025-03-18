@@ -1,7 +1,14 @@
 use super::synthesizer_service::SynthesizerService;
-use crate::error::{Error::ApiError, Result};
+use crate::error::{
+    Error::{self, ApiError},
+    Result,
+};
 use async_trait::async_trait;
 use bytes::Bytes;
+use futures::{
+    stream::{once, BoxStream},
+    StreamExt,
+};
 use reqwest::Client;
 use serde_json::json;
 use url::Url;
@@ -24,23 +31,31 @@ impl PiperClient {
 
 #[async_trait]
 impl SynthesizerService for PiperClient {
-    async fn synthesize(&self, text: &str) -> Result<Bytes> {
+    async fn synthesize(
+        &self,
+        text: BoxStream<'static, Result<String>>,
+    ) -> Result<BoxStream<'static, Result<Bytes>>> {
         let url = self.base_url.join("api/synthesizer")?;
 
         let request_body = json!({
-            "text": text,
+            "text": text.collect::<Vec<_>>().await.into_iter().collect::<std::result::Result<String, _>>()?,
             "voice": self.voice,
         });
 
         let response = self.client.post(url).json(&request_body).send().await?;
 
-        if response.status().is_success() {
-            Ok(response.bytes().await?)
-        } else {
-            Err(ApiError(format!(
+        if !response.status().is_success() {
+            return Err(ApiError(format!(
                 "Failed to synthesize speech: {}",
                 response.status()
-            )))
+            )));
         }
+
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(|e| Error::ApiError(format!("Failed to read response bytes: {}", e)))?;
+
+        Ok(Box::pin(once(async move { Ok(bytes) })))
     }
 }
