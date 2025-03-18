@@ -20,7 +20,7 @@ implementation = "local"
 remote_url = "ws://localhost:5555/"
 
 [response]
-ResponseKind = "text"
+ResponseKind = "audio"
 
 [server]
 host = "127.0.0.1"
@@ -30,12 +30,15 @@ port = 8080
 local_model_path = "base.bin"
 local_use_gpu = true
 deepgram_base_url = "https://api.deepgram.com/v1/"
-implementation = "local"
+implementation = "deepgram"
 
 [synthesizer]
-base_url = "http://localhost:5000/"
-voice = "en_US-ljspeech-high.onnx"
-implementation = "piper"
+elevenlabs_base_url = "https://api.elevenlabs.io/"
+elevenlabs_model_id = "eleven_multilingual_v2"
+elevenlabs_voice_id = "Xb7hH8MSUJpSbSDYk0k2"
+piper_base_url = "http://localhost:5000/"
+piper_voice = "en_US-ljspeech-high.onnx"
+implementation = "elevenlabs"
 
 [weather]
 base_url = "https://api.openweathermap.org/data/3.0/onecall/"

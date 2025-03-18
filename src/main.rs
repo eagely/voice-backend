@@ -19,7 +19,7 @@ use service::{
     parsing::{ParsingService, PatternMatchParser, RasaClient},
     recording::{remote_recorder::RemoteRecorder, LocalRecorder, RecordingService},
     runtime::LocalRuntime,
-    synthesis::{PiperClient, SynthesizerService},
+    synthesis::{ElevenlabsClient, PiperClient, SynthesizerService},
     timer::memory_timer::MemoryTimer,
     transcription::{DeepgramClient, LocalWhisperClient, TranscriptionService},
     weather::{OpenWeatherMapClient, WeatherService},
@@ -92,10 +92,15 @@ async fn main() -> Result<()> {
         workspace_service,
     ));
 
-    let synthesizer_service: Box<dyn SynthesizerService> = match config.synthesizer.implementation {
+    let synthesis_service: Box<dyn SynthesizerService> = match config.synthesizer.implementation {
+        SynthesisImplementation::Elevenlabs => Box::new(ElevenlabsClient::new(
+            &config.synthesizer.elevenlabs_base_url,
+            &config.synthesizer.elevenlabs_model_id,
+            &config.synthesizer.elevenlabs_voice_id,
+        )?),
         SynthesisImplementation::Piper => Box::new(PiperClient::new(
-            &config.synthesizer.base_url,
-            &config.synthesizer.voice,
+            &config.synthesizer.piper_base_url,
+            &config.synthesizer.piper_voice,
         )?),
     };
 
@@ -105,8 +110,8 @@ async fn main() -> Result<()> {
         transcriber,
         parsing_service,
         runtime_service,
-        synthesizer_service,
-        Arc::new(config.response.response_type.clone()),
+        synthesis_service,
+        config.response.response_type.clone(),
     )
     .await?;
 

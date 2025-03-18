@@ -37,6 +37,7 @@ pub enum TranscriptionImplementation {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SynthesisImplementation {
+    Elevenlabs,
     Piper,
 }
 
@@ -49,6 +50,6 @@ pub enum WeatherImplementation {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ResponseKind {
-    Text,
     Audio,
+    Text,
 }
