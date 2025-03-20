@@ -53,7 +53,7 @@ pub struct RecordingConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct ResponseConfig {
-    pub response_type: ResponseKind,
+    pub response_kind: ResponseKind,
 }
 
 #[derive(Debug, Deserialize)]
