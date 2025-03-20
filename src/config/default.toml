@@ -10,29 +10,29 @@ deepseek_model = "deepseek-chat"
 ollama_model = "deepseek-r1:7b"
 implementation = "ollama"
 
-[parser]
+[parsing]
 rasa_base_url = "http://localhost:5005/"
 implementation = "patternmatch"
 
-[recorder]
+[recording]
 device_name = "pipewire"
 implementation = "local"
 remote_url = "ws://localhost:5555/"
 
 [response]
-ResponseKind = "audio"
+response_kind = "audio"
 
 [server]
 host = "127.0.0.1"
 port = 8080
 
-[transcriber]
+[transcription]
 local_model_path = "base.bin"
 local_use_gpu = true
 deepgram_base_url = "https://api.deepgram.com/v1/"
 implementation = "deepgram"
 
-[synthesizer]
+[synthesis]
 elevenlabs_base_url = "https://api.elevenlabs.io/"
 elevenlabs_model_id = "eleven_multilingual_v2"
 elevenlabs_voice_id = "Xb7hH8MSUJpSbSDYk0k2"

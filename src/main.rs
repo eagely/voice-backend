@@ -19,7 +19,7 @@ use service::{
     parsing::{ParsingService, PatternMatchParser, RasaClient},
     recording::{remote_recorder::RemoteRecorder, LocalRecorder, RecordingService},
     runtime::LocalRuntime,
-    synthesis::{ElevenlabsClient, PiperClient, SynthesizerService},
+    synthesis::{ElevenLabsClient, PiperClient, SynthesizerService},
     timer::memory_timer::MemoryTimer,
     transcription::{DeepgramClient, LocalWhisperClient, TranscriptionService},
     weather::{OpenWeatherMapClient, WeatherService},
@@ -31,22 +31,22 @@ use std::sync::Arc;
 async fn main() -> Result<()> {
     let config = Arc::new(AppConfig::new()?);
 
-    let recorder: Box<dyn RecordingService> = match config.recorder.implementation {
+    let recorder: Box<dyn RecordingService> = match config.recording.implementation {
         RecordingImplementation::Local => {
-            Box::new(LocalRecorder::new(&config.recorder.device_name)?)
+            Box::new(LocalRecorder::new(&config.recording.device_name)?)
         }
         RecordingImplementation::Remote => {
-            Box::new(RemoteRecorder::new(&config.recorder.remote_url).await?)
+            Box::new(RemoteRecorder::new(&config.recording.remote_url).await?)
         }
     };
 
-    let transcriber: Box<dyn TranscriptionService> = match config.transcriber.implementation {
+    let transcriber: Box<dyn TranscriptionService> = match config.transcription.implementation {
         TranscriptionImplementation::Deepgram => {
-            Box::new(DeepgramClient::new(&config.transcriber.deepgram_base_url)?)
+            Box::new(DeepgramClient::new(&config.transcription.deepgram_base_url)?)
         }
         TranscriptionImplementation::Local => Box::new(LocalWhisperClient::new(
-            &config.transcriber.local_model_path,
-            config.transcriber.local_use_gpu,
+            &config.transcription.local_model_path,
+            config.transcription.local_use_gpu,
         )?),
     };
 
@@ -77,9 +77,9 @@ async fn main() -> Result<()> {
 
     let timer_service = Arc::new(MemoryTimer::new());
 
-    let parsing_service: Box<dyn ParsingService> = match config.parser.implementation {
+    let parsing_service: Box<dyn ParsingService> = match config.parsing.implementation {
         ParsingImplementation::PatternMatch => Box::new(PatternMatchParser::new()),
-        ParsingImplementation::Rasa => Box::new(RasaClient::new(&config.parser.rasa_base_url)?),
+        ParsingImplementation::Rasa => Box::new(RasaClient::new(&config.parsing.rasa_base_url)?),
     };
 
     let workspace_service = Arc::new(KWinClient);
@@ -92,15 +92,15 @@ async fn main() -> Result<()> {
         workspace_service,
     ));
 
-    let synthesis_service: Box<dyn SynthesizerService> = match config.synthesizer.implementation {
-        SynthesisImplementation::Elevenlabs => Box::new(ElevenlabsClient::new(
-            &config.synthesizer.elevenlabs_base_url,
-            &config.synthesizer.elevenlabs_model_id,
-            &config.synthesizer.elevenlabs_voice_id,
+    let synthesis_service: Box<dyn SynthesizerService> = match config.synthesis.implementation {
+        SynthesisImplementation::Elevenlabs => Box::new(ElevenLabsClient::new(
+            &config.synthesis.elevenlabs_base_url,
+            &config.synthesis.elevenlabs_model_id,
+            &config.synthesis.elevenlabs_voice_id,
         )?),
         SynthesisImplementation::Piper => Box::new(PiperClient::new(
-            &config.synthesizer.piper_base_url,
-            &config.synthesizer.piper_voice,
+            &config.synthesis.piper_base_url,
+            &config.synthesis.piper_voice,
         )?),
     };
 

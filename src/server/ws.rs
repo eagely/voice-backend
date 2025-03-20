@@ -75,9 +75,11 @@ impl WsServer {
                                     }
                                 }
                                 ResponseKind::Audio => {
-                                    let mut audio_stream = self.synthesizer.synthesize(output_stream).await?;
-                                    while let Some(audio) = audio_stream.next().await {
-                                        ws_stream.send(Message::Binary(audio?)).await?;
+                                    let mut audio_stream_base64 =
+                                        self.synthesizer.synthesize(output_stream).await?;
+                                    while let Some(audio_base64) = audio_stream_base64.next().await
+                                    {
+                                        ws_stream.send(Message::Text(audio_base64?.into())).await?;
                                     }
                                 }
                             }
