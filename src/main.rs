@@ -111,7 +111,7 @@ async fn main() -> Result<()> {
         parsing_service,
         runtime_service,
         synthesis_service,
-        config.response.response_type.clone(),
+        config.response.response_kind.clone(),
     )
     .await?;
 
