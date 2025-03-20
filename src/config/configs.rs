@@ -13,12 +13,12 @@ use toml::{to_string, Value};
 pub struct AppConfig {
     pub geocoding: GeocodingConfig,
     pub llm: LlmConfig,
-    pub parser: ParsingConfig,
-    pub recorder: RecordingConfig,
+    pub parsing: ParsingConfig,
+    pub recording: RecordingConfig,
     pub response: ResponseConfig,
     pub server: ServerConfig,
-    pub transcriber: TranscriptionConfig,
-    pub synthesizer: SynthesisConfig,
+    pub transcription: TranscriptionConfig,
+    pub synthesis: SynthesisConfig,
     pub weather: WeatherConfig,
 }
 

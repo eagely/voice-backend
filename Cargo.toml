@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.88"
+base64 = "0.22.1"
 bytes = "1.10.1"
 config = "0.15.11"
 cpal = "0.15.3"
@@ -28,6 +29,6 @@ tokio = { version = "1.44.1", features = [
 ] }
 tokio-tungstenite = { version = "0.26.2", features = ["native-tls"]}
 toml = "0.8.20"
-reqwest = { version = "0.12.14", features = ["json", "stream"] }
+reqwest = { version = "0.12.15", features = ["json", "stream"] }
 url = "2.5.4"
 whisper-rs = "0.14.2"

@@ -171,7 +171,7 @@ mod tests {
     async fn test_rasa_client_parse_weather_intent() -> Result<()> {
         let config = Arc::new(AppConfig::new()?);
 
-        let rasa_client = RasaClient::new(&config.parser.rasa_base_url)?;
+        let rasa_client = RasaClient::new(&config.parsing.rasa_base_url)?;
 
         let action = rasa_client.parse("Weather in Vienna").await?;
 
