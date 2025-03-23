@@ -68,6 +68,8 @@ impl LlmService for DeepSeekClient {
             .json(&request_body)
             .send()
             .await?;
+        
+        println!("Got deepseek response");
 
         if response.status().is_success() {
             let stream = response.bytes_stream().map(|chunk| {

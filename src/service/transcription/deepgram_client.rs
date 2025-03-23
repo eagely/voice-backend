@@ -60,7 +60,6 @@ impl TranscriptionService for DeepgramClient {
             }
         } else {
             let error_json: Value = response.json().await?;
-            dbg!(&error_json);
             Err(Error::ApiError(
                 error_json["err_msg"]
                     .as_str()

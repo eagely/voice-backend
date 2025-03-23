@@ -1,6 +1,9 @@
 use super::SynthesizerService;
 use crate::error::{Error, Result};
 use async_trait::async_trait;
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
+use bytes::Bytes;
 use futures_util::sink::SinkExt;
 use futures_util::stream::{BoxStream, SplitStream, StreamExt};
 use futures_util::Stream;
@@ -73,29 +76,50 @@ struct AudioStream {
 }
 
 impl Stream for AudioStream {
-    type Item = Result<String>;
+    type Item = Result<Bytes>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match Pin::new(&mut self.stream).poll_next(cx) {
             Poll::Ready(Some(Ok(msg))) => match msg {
-                Message::Text(text) => Poll::Ready(Some(
-                    from_str::<Value>(&text)
-                        .map_err(|e| Error::ApiError(format!("Failed to parse ElevenLabs response JSON: {}", e)))
-                        .and_then(|parsed| {
+                Message::Text(text) => match from_str::<Value>(&text) {
+                    Ok(parsed) => {
+                        if let Some(is_final) = parsed.get("isFinal") {
+                            if is_final.as_bool() == Some(true) {
+                                println!("Audio synthesis finished");
+                                return Poll::Ready(None);
+                            }
+                        }
+
+                        if let Some(audio) = parsed.get("audio") {
+                            if let Some(audio_str) = audio.as_str() {
+                                return Poll::Ready(Some(
+                                    STANDARD
+                                        .decode(audio_str)
+                                        .map_err(|e| {
+                                            Error::ApiError(format!(
+                                                "Failed to decode base64 audio: {}",
+                                                e
+                                            ))
+                                        })
+                                        .map(Bytes::from),
+                                ));
+                            }
+                        }
+
+                        Poll::Ready(Some(Err(Error::ApiError(format!(
+                            "Received message not containing audio from ElevenLabs: {}",
                             parsed
-                                .get("audio")
-                                .map(|audio| audio.to_string())
-                                .ok_or_else(|| {
-                                    Error::ApiError(
-                                        "Received message not containing audio from ElevenLabs".to_string(),
-                                    )
-                                })
-                        }),
-                )),
+                        )))))
+                    }
+                    Err(e) => Poll::Ready(Some(Err(Error::ApiError(format!(
+                        "Failed to parse ElevenLabs response JSON: {}",
+                        e
+                    ))))),
+                },
                 Message::Close(_) => Poll::Ready(None),
-                _ => Poll::Ready(Some(Err(Error::ApiError(format!(
-                    "Received non-text message from ElevenLabs"
-                ))))),
+                _ => Poll::Ready(Some(Err(Error::ApiError(
+                    "Received non-text message from ElevenLabs".to_string(),
+                )))),
             },
             Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(Error::ApiError(format!(
                 "ElevenLabs WebSocket error: {}",
@@ -112,11 +136,16 @@ impl SynthesizerService for ElevenLabsClient {
     async fn synthesize(
         &self,
         text: BoxStream<'static, Result<String>>,
-    ) -> Result<BoxStream<'static, Result<String>>> {
+    ) -> Result<BoxStream<'static, Result<Bytes>>> {
         let ws_stream = self.connect_websocket().await?;
+        let full_text = text
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .collect::<std::result::Result<String, _>>()?;
         let audio_request = json!({
             "event": "audio_request",
-            "text": text.collect::<Vec<_>>().await.into_iter().collect::<std::result::Result<String, _>>()?,
+            "text": full_text,
             "voice_settings": {
                 "stability": 0.75,
                 "similarity_boost": 1

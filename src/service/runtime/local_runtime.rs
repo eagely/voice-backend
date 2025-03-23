@@ -167,7 +167,9 @@ impl RuntimeService for LocalRuntime {
                         match &entity.value {
                             EntityValue::String(location) => {
                                 let geocode = self.geocoding_service.request(location).await?;
+                                println!("Geocode received: {:?}", &geocode);
                                 let weather_response = self.weather_service.request(geocode).await?;
+                                println!("Weather response received: {:?}", &weather_response);
                                 Self::string_stream(weather_response)
                             },
                             _ => Self::string_stream("Invalid location format received.")

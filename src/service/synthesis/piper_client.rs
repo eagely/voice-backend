@@ -4,6 +4,7 @@ use crate::error::{
     Result,
 };
 use async_trait::async_trait;
+use bytes::Bytes;
 use futures::{
     stream::{once, BoxStream},
     StreamExt,
@@ -33,7 +34,7 @@ impl SynthesizerService for PiperClient {
     async fn synthesize(
         &self,
         text: BoxStream<'static, Result<String>>,
-    ) -> Result<BoxStream<'static, Result<String>>> {
+    ) -> Result<BoxStream<'static, Result<Bytes>>> {
         let url = self.base_url.join("api/synthesizer")?;
 
         let request_body = json!({
@@ -51,7 +52,7 @@ impl SynthesizerService for PiperClient {
         }
 
         let audio = response
-            .text()
+            .bytes()
             .await
             .map_err(|e| Error::ApiError(format!("Failed to read response bytes: {}", e)))?;
 

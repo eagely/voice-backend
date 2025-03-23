@@ -45,7 +45,7 @@ impl WeatherService for OpenWeatherMapClient {
         let humidity = weather_response.current.humidity;
 
         let result = format!(
-            "The temperature in {} is {}°C with {} humidity of {}%",
+            "The temperature in {} is {} degrees Celsius with {} humidity of {}%",
             geocode.name, temp, description, humidity
         );
         Ok(result)
