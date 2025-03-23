@@ -26,9 +26,13 @@ impl NominatimClient {
 #[async_trait]
 impl GeocodingService for NominatimClient {
     async fn request(&self, address: &str) -> Result<GeocodeResponse> {
-        let mut url = self.base_url.clone();
+        let mut url = self.base_url.join("search")?;
+        let clean_address: String = address
+            .chars()
+            .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+            .collect();
         url.query_pairs_mut()
-            .append_pair("q", address)
+            .append_pair("q", &clean_address)
             .append_pair("format", "json")
             .append_pair("limit", "1");
         let response = self.client.get(url).send().await?.text().await?;

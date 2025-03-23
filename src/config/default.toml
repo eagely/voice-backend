@@ -1,5 +1,5 @@
 [geocoding]
-base_url = "https://nominatim.openstreetmap.org/search/"
+base_url = "https://nominatim.openstreetmap.org/"
 user_agent = "eagely's Voice Assistant/1.0"
 implementation = "nominatim"
 
@@ -8,11 +8,11 @@ deepseek_base_url = "https://api.deepseek.com/"
 ollama_base_url = "http://localhost:11434/"
 deepseek_model = "deepseek-chat"
 ollama_model = "deepseek-r1:7b"
-implementation = "ollama"
+implementation = "deepseek"
 
 [parsing]
 rasa_base_url = "http://localhost:5005/"
-implementation = "patternmatch"
+implementation = "rasa"
 
 [recording]
 device_name = "pipewire"
@@ -30,12 +30,12 @@ port = 8080
 local_model_path = "base.bin"
 local_use_gpu = true
 deepgram_base_url = "https://api.deepgram.com/v1/"
-implementation = "deepgram"
+implementation = "local"
 
 [synthesis]
-elevenlabs_base_url = "https://api.elevenlabs.io/"
+elevenlabs_base_url = "wss://api.elevenlabs.io/"
 elevenlabs_model_id = "eleven_multilingual_v2"
-elevenlabs_voice_id = "Xb7hH8MSUJpSbSDYk0k2"
+elevenlabs_voice_id = "UgBBYS2sOqTuMpoF3BR0"
 piper_base_url = "http://localhost:5000/"
 piper_voice = "en_US-ljspeech-high.onnx"
 implementation = "elevenlabs"

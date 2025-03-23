@@ -6,7 +6,7 @@ use crate::error::Result;
 use config::{Config, Environment, File};
 use serde::Deserialize;
 use std::path::PathBuf;
-use tokio::fs;
+use tokio::fs::{self, read_to_string, write};
 use toml::{to_string, Value};
 
 #[derive(Debug, Deserialize)]
@@ -125,7 +125,7 @@ impl AppConfig {
 
     pub async fn write_config(table: &str, key: &str, value: &str) -> Result<()> {
         if let Some(config_path) = Self::get_config_file() {
-            let config_content = fs::read_to_string(&config_path).await?;
+            let config_content = read_to_string(&config_path).await?;
             let mut config_value: Value = config_content.parse()?;
 
             let table_value = config_value.get_mut(table).ok_or_else(|| {
@@ -138,7 +138,7 @@ impl AppConfig {
             table_value[key] = Value::String(value.to_string());
 
             let new_config_content = to_string(&config_value)?;
-            fs::write(config_path, new_config_content).await?;
+            write(config_path, new_config_content).await?;
 
             Ok(())
         } else {
