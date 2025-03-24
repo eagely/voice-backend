@@ -4,6 +4,7 @@ use crate::model::action::{Action, EntityValue, IntentKind};
 use crate::service::geocoding::GeocodingService;
 use crate::service::llm::LlmService;
 use crate::service::timer::timer_service::TimerService;
+use crate::service::volume::VolumeService;
 use crate::service::weather::WeatherService;
 use crate::service::workspace::WorkspaceService;
 use async_trait::async_trait;
@@ -16,6 +17,7 @@ pub struct LocalRuntime {
     llm_service: Arc<dyn LlmService>,
     weather_service: Arc<dyn WeatherService>,
     timer_service: Arc<dyn TimerService>,
+    volume_service: Arc<dyn VolumeService>,
     workspace_service: Arc<dyn WorkspaceService>,
 }
 
@@ -25,6 +27,7 @@ impl LocalRuntime {
         llm_service: Arc<dyn LlmService>,
         weather_service: Arc<dyn WeatherService>,
         timer_service: Arc<dyn TimerService>,
+        volume_service: Arc<dyn VolumeService>,
         workspace_service: Arc<dyn WorkspaceService>,
     ) -> Self {
         Self {
@@ -32,6 +35,7 @@ impl LocalRuntime {
             llm_service,
             weather_service,
             timer_service,
+            volume_service,
             workspace_service,
         }
     }
@@ -63,6 +67,48 @@ impl RuntimeService for LocalRuntime {
                 let response = self.llm_service.request(&action.text).await;
                 response
             }
+            IntentKind::DecreaseVolume => {
+                let value = action.entities.iter().find(|e| e.entity == "value");
+
+                if let Some(value) = value {
+                    if let EntityValue::Index(index) = value.value {
+                        self.volume_service.decrease(index as u8).await?;
+                        Self::string_stream("Volume decreased.")
+                    } else {
+                        Self::string_stream("Invalid volume value provided.")
+                    }
+                } else {
+                    Self::string_stream("No value specified for volume decrease.")
+                }
+            }
+            IntentKind::IncreaseVolume => {
+                let value = action.entities.iter().find(|e| e.entity == "value");
+
+                if let Some(value) = value {
+                    if let EntityValue::Index(index) = value.value {
+                        self.volume_service.increase(index as u8).await?;
+                        Self::string_stream("Volume increased.")
+                    } else {
+                        Self::string_stream("Invalid volume value provided.")
+                    }
+                } else {
+                    Self::string_stream("No value specified for volume increase.")
+                }
+            }
+            IntentKind::SetVolume => {
+                let value = action.entities.iter().find(|e| e.entity == "value");
+
+                if let Some(value) = value {
+                    if let EntityValue::Index(index) = value.value {
+                        self.volume_service.set(index as u8).await?;
+                        Self::string_stream("Volume set.")
+                    } else {
+                        Self::string_stream("Invalid volume value provided.")
+                    }
+                } else {
+                    Self::string_stream("No value specified for volume setting.")
+                }
+            }
             IntentKind::MinimizeWindow => {
                 self.workspace_service.minimize_window().await?;
                 Self::string_stream("Window minimized.")
@@ -70,33 +116,6 @@ impl RuntimeService for LocalRuntime {
             IntentKind::MaximizeWindow => {
                 self.workspace_service.maximize_window().await?;
                 Self::string_stream("Window maximized.")
-            }
-            IntentKind::RunCommand => {
-                let application_entity = action
-                    .entities
-                    .iter()
-                    .find(|entity| entity.entity == "APPLICATION");
-
-                let response = match application_entity {
-                                Some(entity) => {
-                                    if let Some(confidence) = entity.confidence {
-                                        if confidence < 0.9 {
-                                            return Self::string_stream("I'm not sure which application you are referring to. Could you say that again?");
-                                        }
-                                    }
-
-                                    match &entity.value {
-                                        EntityValue::String(application) => {
-                                            self.workspace_service.run_command(application).await?;
-                                            format!("Opened application: {}.", application)
-                                        },
-                                        _ => "Invalid application format received.".to_string()
-                                    }
-                                }
-                                None => "I couldn't figure out which application you were referring to. Could you say that again?".to_string(),
-                            };
-
-                Self::string_stream(response)
             }
             IntentKind::SetTimer => {
                 let duration = action
