@@ -90,19 +90,6 @@ impl ParsingService for PatternMatchParser {
                 Vec::new(),
                 input.to_string(),
             )),
-            x if x.contains("open") => {
-                let application = Self::remove(x.to_string(), &["open"]);
-                let entities = vec![Entity::new(
-                    "APPLICATION",
-                    EntityValue::String(application),
-                    None,
-                )];
-                Ok(Action::new(
-                    Intent::new(IntentKind::RunCommand, None),
-                    entities,
-                    input.to_string(),
-                ))
-            }
             x if x.contains("timer") || x.contains("alarm") => {
                 if let Some(duration) = Self::extract_duration(x) {
                     let entities = vec![Entity::new(

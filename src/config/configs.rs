@@ -6,7 +6,7 @@ use crate::error::Result;
 use config::{Config, Environment, File};
 use serde::Deserialize;
 use std::path::PathBuf;
-use tokio::fs::{self, read_to_string, write};
+use tokio::fs::{ read_to_string, write};
 use toml::{to_string, Value};
 
 #[derive(Debug, Deserialize)]

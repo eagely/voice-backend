@@ -6,5 +6,6 @@ pub mod runtime;
 pub mod synthesis;
 pub mod timer;
 pub mod transcription;
+pub mod volume;
 pub mod weather;
 pub mod workspace;

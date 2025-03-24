@@ -1,9 +1,8 @@
-use std::fmt;
-
 use serde::{
     de::{Error, Visitor},
     Deserialize, Deserializer,
 };
+use std::fmt;
 
 #[derive(Debug, Deserialize)]
 pub struct Action {
@@ -36,15 +35,22 @@ impl Intent {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum IntentKind {
-    CloseWindow,
     LlmQuery,
+
+    SetTimer,
+
+    WeatherQuery,
+
+    DecreaseVolume,
+    IncreaseVolume,
+    SetVolume,
+
+    CloseWindow,
     MaximizeWindow,
     MinimizeWindow,
-    RunCommand,
-    SetTimer,
-    ShowDesktop,
     SwitchWorkspace,
-    WeatherQuery,
+    ShowDesktop,
+
     Other(String),
 }
 
@@ -69,6 +75,9 @@ impl<'de> Deserialize<'de> for IntentKind {
                 match value {
                     "close_window" => Ok(IntentKind::CloseWindow),
                     "nlu_fallback" => Ok(IntentKind::LlmQuery),
+                    "increase_volume" => Ok(IntentKind::IncreaseVolume),
+                    "decrease_volume" => Ok(IntentKind::DecreaseVolume),
+                    "set_volume" => Ok(IntentKind::SetVolume),
                     "maximize_window" => Ok(IntentKind::MaximizeWindow),
                     "minimize_window" => Ok(IntentKind::MinimizeWindow),
                     "set_timer" => Ok(IntentKind::SetTimer),

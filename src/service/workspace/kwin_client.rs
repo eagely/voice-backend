@@ -1,120 +1,71 @@
 use super::workspace_service::WorkspaceService;
-use crate::error::{Error::WorkspaceManagementError, Result};
+use crate::error::{Error, Result};
 use async_trait::async_trait;
 use std::process::Command;
 
 pub struct KWinClient;
 
+impl KWinClient {
+    async fn qdbus(&self, command: &str, error_message: &str) -> Result<()> {
+        let output = Command::new("qdbus")
+            .args(command.split(" "))
+            .output()
+            .map_err(|e| Error::WorkspaceManagementError(e.to_string()))?;
+
+        if !output.status.success() {
+            return Err(Error::WorkspaceManagementError(format!(
+                "Failed to {}: {}",
+                error_message,
+                String::from_utf8_lossy(&output.stderr)
+            )));
+        }
+
+        Ok(())
+    }
+
+    async fn invoke_shortcut(&self, shortcut: &str, error_message: &str) -> Result<()> {
+        self.qdbus(
+            format!(
+                "org.kde.kglobalaccel /component/kwin invokeShortcut {}",
+                shortcut
+            )
+            .as_str(),
+            error_message,
+        )
+        .await
+    }
+}
+
 #[async_trait]
 impl WorkspaceService for KWinClient {
     async fn close_window(&self) -> Result<()> {
-        let output = Command::new("qdbus")
-            .arg("org.kde.kglobalaccel")
-            .arg("/component/kwin")
-            .arg("invokeShortcut")
-            .arg("Window Close")
-            .output()
-            .map_err(|e| WorkspaceManagementError(e.to_string()))?;
-
-        if !output.status.success() {
-            return Err(WorkspaceManagementError(format!(
-                "Failed to close window: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
-        Ok(())
+        self.invoke_shortcut("Window Close", "close window").await
     }
 
     async fn minimize_window(&self) -> Result<()> {
-        let output = Command::new("qdbus")
-            .arg("org.kde.kglobalaccel")
-            .arg("/component/kwin")
-            .arg("invokeShortcut")
-            .arg("Window Minimize")
-            .output()
-            .map_err(|e| WorkspaceManagementError(e.to_string()))?;
-
-        if !output.status.success() {
-            return Err(WorkspaceManagementError(format!(
-                "Failed to minimize window: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
-        Ok(())
+        self.invoke_shortcut("Window Minimize", "minimize window")
+            .await
     }
 
     async fn maximize_window(&self) -> Result<()> {
-        let output = Command::new("qdbus")
-            .arg("org.kde.kglobalaccel")
-            .arg("/component/kwin")
-            .arg("invokeShortcut")
-            .arg("Window Maximize")
-            .output()
-            .map_err(|e| WorkspaceManagementError(e.to_string()))?;
-
-        if !output.status.success() {
-            return Err(WorkspaceManagementError(format!(
-                "Failed to maximize window: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
-        Ok(())
-    }
-
-    async fn run_command(&self, application: &str) -> Result<()> {
-        let output = Command::new(application)
-            .output()
-            .map_err(|e| WorkspaceManagementError(e.to_string()))?;
-
-        if !output.status.success() {
-            return Err(WorkspaceManagementError(format!(
-                "Failed to run command: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
-        Ok(())
+        self.invoke_shortcut("Window Maximize", "maximize window")
+            .await
     }
 
     async fn show_desktop(&self) -> Result<()> {
-        let output = Command::new("qdbus")
-            .arg("org.kde.kglobalaccel")
-            .arg("/component/kwin")
-            .arg("invokeShortcut")
-            .arg("Show Desktop")
-            .output()
-            .map_err(|e| WorkspaceManagementError(e.to_string()))?;
-
-        if !output.status.success() {
-            return Err(WorkspaceManagementError(format!(
-                "Failed to show desktop: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
-        Ok(())
+        self.invoke_shortcut("Show Desktop", "show desktop").await
     }
 
     async fn switch_workspace(&self, workspace: usize) -> Result<()> {
-        let output = Command::new("qdbus")
-            .arg("org.kde.KWin")
-            .arg("/KWin")
-            .arg("org.kde.KWin.setCurrentDesktop")
-            .arg(workspace.to_string())
-            .output()
-            .map_err(|e| WorkspaceManagementError(e.to_string()))?;
-
-        if !output.status.success() {
-            return Err(WorkspaceManagementError(format!(
-                "Failed to switch workspace: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
-        Ok(())
+        self.qdbus(
+            format!(
+                "org.kde.KWin /KWin org.kde.KWin.setCurrentDesktop {}",
+                workspace
+            )
+            .as_str(),
+            "switch workspace",
+        )
+        .await
     }
 }
 
@@ -154,19 +105,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_run_command() -> Result<()> {
-        let kwin_client = KWinClient;
-
-        let run_command_result = kwin_client.run_command("zeditor").await;
-        assert!(
-            run_command_result.is_ok(),
-            "Failed to run command: zeditor"
-        );
-
-        Ok(())
-    }
-
-    #[tokio::test]
     async fn test_show_desktop() -> Result<()> {
         let kwin_client = KWinClient;
 
@@ -180,7 +118,7 @@ mod tests {
     async fn test_switch_workspace() -> Result<()> {
         let kwin_client = KWinClient;
 
-        let switch_workspace_result = kwin_client.switch_workspace(2).await;
+        let switch_workspace_result = kwin_client.switch_workspace(6).await;
         assert!(
             switch_workspace_result.is_ok(),
             "Failed to switch workspace"

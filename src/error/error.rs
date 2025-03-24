@@ -44,6 +44,8 @@ pub enum Error {
     RequestError(#[from] reqwest::Error),
     #[error("Url parse error: {0}")]
     UrlParseError(#[from] url::ParseError),
+    #[error("Volume adjustment error: {0}")]
+    VolumeAdjustmentError(String),
     #[error("WebSocket communication error: {0}")]
     WebSocketError(#[from] tokio_tungstenite::tungstenite::Error),
     #[error("Whisper error: {0}")]

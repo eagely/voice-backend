@@ -5,8 +5,5 @@ use futures::stream::BoxStream;
 
 #[async_trait]
 pub trait RuntimeService: Send + Sync {
-    async fn run(
-        &self,
-        action: Action,
-    ) -> Result<BoxStream<'static, Result<String>>>;
+    async fn run(&self, action: Action) -> Result<BoxStream<'static, Result<String>>>;
 }

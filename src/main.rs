@@ -22,6 +22,7 @@ use service::{
     synthesis::{ElevenLabsClient, PiperClient, SynthesizerService},
     timer::memory_timer::MemoryTimer,
     transcription::{DeepgramClient, LocalWhisperClient, TranscriptionService},
+    volume::PactlClient,
     weather::{OpenWeatherMapClient, WeatherService},
     workspace::KWinClient,
 };
@@ -41,9 +42,9 @@ async fn main() -> Result<()> {
     };
 
     let transcriber: Box<dyn TranscriptionService> = match config.transcription.implementation {
-        TranscriptionImplementation::Deepgram => {
-            Box::new(DeepgramClient::new(&config.transcription.deepgram_base_url)?)
-        }
+        TranscriptionImplementation::Deepgram => Box::new(DeepgramClient::new(
+            &config.transcription.deepgram_base_url,
+        )?),
         TranscriptionImplementation::Local => Box::new(LocalWhisperClient::new(
             &config.transcription.local_model_path,
             config.transcription.local_use_gpu,
@@ -82,6 +83,8 @@ async fn main() -> Result<()> {
         ParsingImplementation::Rasa => Box::new(RasaClient::new(&config.parsing.rasa_base_url)?),
     };
 
+    let volume_service = Arc::new(PactlClient);
+
     let workspace_service = Arc::new(KWinClient);
 
     let runtime_service = Box::new(LocalRuntime::new(
@@ -89,6 +92,7 @@ async fn main() -> Result<()> {
         llm_service,
         weather_service,
         timer_service,
+        volume_service,
         workspace_service,
     ));
 
