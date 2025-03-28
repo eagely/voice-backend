@@ -30,7 +30,7 @@ port = 8080
 local_model_path = "base.bin"
 local_use_gpu = true
 deepgram_base_url = "https://api.deepgram.com/v1/"
-implementation = "local"
+implementation = "deepgram"
 
 [synthesis]
 elevenlabs_base_url = "wss://api.elevenlabs.io/"
