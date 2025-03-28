@@ -7,6 +7,7 @@ use bytes::Bytes;
 use futures_util::sink::SinkExt;
 use futures_util::stream::{BoxStream, SplitStream, StreamExt};
 use futures_util::Stream;
+use log::info;
 use serde_json::{from_str, json, Value};
 use std::env::var;
 use std::pin::Pin;
@@ -85,7 +86,7 @@ impl Stream for AudioStream {
                     Ok(parsed) => {
                         if let Some(is_final) = parsed.get("isFinal") {
                             if is_final.as_bool() == Some(true) {
-                                println!("Audio synthesis finished");
+                                info!("Audio synthesis finished");
                                 return Poll::Ready(None);
                             }
                         }

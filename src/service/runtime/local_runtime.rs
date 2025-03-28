@@ -9,6 +9,7 @@ use crate::service::weather::WeatherService;
 use crate::service::workspace::WorkspaceService;
 use async_trait::async_trait;
 use futures::stream::{self, BoxStream, StreamExt};
+use log::info;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -186,9 +187,9 @@ impl RuntimeService for LocalRuntime {
                         match &entity.value {
                             EntityValue::String(location) => {
                                 let geocode = self.geocoding_service.request(location).await?;
-                                println!("Geocode received: {:?}", &geocode);
+                                info!("Geocode received: {:?}", &geocode);
                                 let weather_response = self.weather_service.request(geocode).await?;
-                                println!("Weather response received: {:?}", &weather_response);
+                                info!("Weather response received: {:?}", &weather_response);
                                 Self::string_stream(weather_response)
                             },
                             _ => Self::string_stream("Invalid location format received.")

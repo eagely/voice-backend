@@ -2,6 +2,7 @@ use super::timer_service::TimerService;
 use crate::error::Result;
 use crate::model::timer::Timer;
 use async_trait::async_trait;
+use log::error;
 use notify_rust::Notification;
 use std::sync::Arc;
 use std::time::Duration;
@@ -42,7 +43,7 @@ impl TimerService for MemoryTimer {
                 timers.remove(pos);
 
                 if let Err(e) = tx.send(result).await {
-                    eprintln!("Failed to send result: {}", e);
+                    error!("Failed to send result: {}", e);
                 }
             }
         });

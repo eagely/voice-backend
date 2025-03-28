@@ -8,6 +8,7 @@ use crate::service::{
 };
 use bytes::BytesMut;
 use futures::{SinkExt, StreamExt};
+use log::info;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 
@@ -66,30 +67,30 @@ impl WsServer {
                         if recording_active {
                             let audio = self.recorder.stop().await?;
                             recording_active = false;
-                            println!("Recording stopped");
+                            info!("Recording stopped");
                             let transcription = self.transcriber.transcribe(&audio).await?;
-                            println!("Transcribed text: {:?}", &transcription);
+                            info!("Transcribed text: {:?}", &transcription);
                             let action = self.parser.parse(&transcription).await?;
-                            println!("Action to perform: {:?}", &action);
+                            info!("Action to perform: {:?}", &action);
                             let mut output_stream = self.runtime.run(action).await?;
-                            println!("Runtime finished");
+                            info!("Runtime finished");
                             match &self.response_kind {
                                 ResponseKind::Text => {
                                     while let Some(text) = output_stream.next().await {
-                                        println!("Sending {:?}", text);
+                                        info!("Sending {:?}", text);
                                         ws_stream.send(Message::Text(text?.into())).await?;
                                     }
                                 }
                                 ResponseKind::Audio => {
                                     let mut audio_stream =
                                         self.synthesizer.synthesize(output_stream).await?;
-                                    println!("Sending audio");
+                                    info!("Sending audio");
                                     let mut audio_buffer = BytesMut::new();
                                     while let Some(audio) = audio_stream.next().await {
                                         audio_buffer.extend_from_slice(&audio?);
                                     }
                                     ws_stream.send(Message::Binary(audio_buffer.into())).await?;
-                                    println!("Audio sent");
+                                    info!("Audio sent");
                                 }
                             }
                         } else {

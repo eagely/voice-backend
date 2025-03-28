@@ -2,6 +2,7 @@ use super::LlmService;
 use crate::error::{Error, Result};
 use async_trait::async_trait;
 use futures_util::stream::{BoxStream, StreamExt};
+use log::info;
 use reqwest::Client;
 use serde_json::{from_str, Value};
 use std::{env, str::from_utf8};
@@ -34,7 +35,13 @@ impl LlmService for DeepSeekClient {
             "model": self.model,
             "messages": [
                 {
-                    "content": "You are a helpful voice assistant that answers questions.",
+                    "content": "You are a fallback for a voice assistant, anything you say will be directly forwarded to the user.
+                    It is highly likely that the speech to text system didnt work perfectly, so if a word seems out of place try to find a word that sounds similar and would make sense.
+                    Keep your answers relatively short, unless the topic is complex. If the users query is gibberish or doesnt make sense, then ask them to repeat it.
+                    If the user asks to do an action, such as ordering food or browsing the web, say you cant do that yet.
+                    The output will be read out to the user, so do not use bulletpoints and make it sound natural when spoken.
+                    Your name is ferris, like the mascot of the rust programming language.
+                    Dont say you are a voice assistant, only answer questions.",
                     "role": "system"
                 },
                 {
@@ -68,8 +75,8 @@ impl LlmService for DeepSeekClient {
             .json(&request_body)
             .send()
             .await?;
-        
-        println!("Got deepseek response");
+
+        info!("Got deepseek response");
 
         if response.status().is_success() {
             let stream = response.bytes_stream().map(|chunk| {
