@@ -1614,9 +1614,9 @@ dependencies = [
 
 [[package]]
 name = "notify-rust"
-version = "4.11.5"
+version = "4.11.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fa3b9f2364a09bd359aa0206702882e208437450866a374d5372d64aece4029"
+checksum = "4012c5a725bfa4cfd09c2f3abf29fb0b03a528d02787744e485c8014cdf6f1c0"
 dependencies = [
  "futures-lite",
  "log",
@@ -1973,6 +1973,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60946a68e5f9d28b0dc1c21bb8a97ee7d018a8b322fa57838ba31cc878e22d99"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "pv_porcupine"
+version = "3.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3811779d053f2833938d46f2a6b98aa07e9c184891d1542ade8160baaf9ac03f"
+dependencies = [
+ "libc",
+ "libloading",
 ]
 
 [[package]]
@@ -2887,6 +2897,7 @@ dependencies = [
  "hound",
  "log",
  "notify-rust",
+ "pv_porcupine",
  "regex",
  "reqwest",
  "serde",

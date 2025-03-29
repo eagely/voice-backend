@@ -18,6 +18,9 @@ implementation = "rasa"
 device_name = "pipewire"
 implementation = "local"
 remote_url = "ws://localhost:5555/"
+porcupine_sensitivity = 1
+wake_word_enabled = true
+wake_word = "ferris.ppn"
 
 [response]
 response_kind = "audio"

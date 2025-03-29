@@ -27,8 +27,7 @@ use service::{
     weather::{OpenWeatherMapClient, WeatherService},
     workspace::KWinClient,
 };
-use std::process;
-use std::sync::Arc;
+use std::{env::var, process, sync::Arc};
 use tokio::time::Duration;
 
 #[tokio::main]
@@ -100,16 +99,26 @@ async fn run_server() -> Result<()> {
 async fn initialize_recorder(config: &Arc<AppConfig>) -> Result<Box<dyn RecordingService>> {
     info!("Initializing recording service...");
     match config.recording.implementation {
-        RecordingImplementation::Local => {
-            Ok(Box::new(LocalRecorder::new(&config.recording.device_name)?))
-        }
+        RecordingImplementation::Local => Ok(Box::new(LocalRecorder::new(
+            &config.recording.device_name,
+            var("PICOVOICE_ACCESS_KEY")?,
+            &config.recording.wake_word,
+            config.recording.wake_word_enabled,
+            config.recording.porcupine_sensitivity,
+        )?)),
         RecordingImplementation::Remote => {
             match RemoteRecorder::new(&config.recording.remote_url).await {
                 Ok(recorder) => Ok(Box::new(recorder)),
                 Err(e) => {
                     error!("Failed to initialize remote recorder: {}", e);
                     warn!("Falling back to local recorder");
-                    Ok(Box::new(LocalRecorder::new(&config.recording.device_name)?))
+                    Ok(Box::new(LocalRecorder::new(
+                        &config.recording.device_name,
+                        var("PICOVOICE_ACCESS_KEY")?,
+                        &config.recording.wake_word,
+                        config.recording.wake_word_enabled,
+                        config.recording.porcupine_sensitivity,
+                    )?))
                 }
             }
         }
@@ -178,7 +187,7 @@ async fn initialize_weather_service(config: &Arc<AppConfig>) -> Result<Arc<dyn W
     info!("Initializing weather service...");
     match config.weather.implementation {
         WeatherImplementation::OpenWeatherMap => {
-            let api_key = std::env::var("OPENWEATHERMAP_API_KEY").map_err(|e| {
+            let api_key = var("OPENWEATHERMAP_API_KEY").map_err(|e| {
                 error!("OpenWeatherMap API key not found: {}", e);
                 e
             })?;
