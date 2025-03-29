@@ -46,6 +46,8 @@ pub enum Error {
     UrlParseError(#[from] url::ParseError),
     #[error("Volume adjustment error: {0}")]
     VolumeAdjustmentError(String),
+    #[error("Wake word error: {0}")]
+    WakeWordError(#[from] porcupine::PorcupineError),
     #[error("WebSocket communication error: {0}")]
     WebSocketError(#[from] tokio_tungstenite::tungstenite::Error),
     #[error("Whisper error: {0}")]

@@ -6,7 +6,7 @@ use crate::error::Result;
 use config::{Config, Environment, File};
 use serde::Deserialize;
 use std::path::PathBuf;
-use tokio::fs::{ read_to_string, write};
+use tokio::fs::{read_to_string, write};
 use toml::{to_string, Value};
 
 #[derive(Debug, Deserialize)]
@@ -49,6 +49,9 @@ pub struct RecordingConfig {
     pub device_name: String,
     pub implementation: RecordingImplementation,
     pub remote_url: String,
+    pub porcupine_sensitivity: f32,
+    pub wake_word: String,
+    pub wake_word_enabled: bool,
 }
 
 #[derive(Debug, Deserialize)]

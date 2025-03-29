@@ -64,37 +64,33 @@ impl WsServer {
                         recording_active = true;
                     }
                     Command::StopRecording => {
-                        if recording_active {
-                            let audio = self.recorder.stop().await?;
-                            recording_active = false;
-                            info!("Recording stopped");
-                            let transcription = self.transcriber.transcribe(&audio).await?;
-                            info!("Transcribed text: {:?}", &transcription);
-                            let action = self.parser.parse(&transcription).await?;
-                            info!("Action to perform: {:?}", &action);
-                            let mut output_stream = self.runtime.run(action).await?;
-                            info!("Runtime finished");
-                            match &self.response_kind {
-                                ResponseKind::Text => {
-                                    while let Some(text) = output_stream.next().await {
-                                        info!("Sending {:?}", text);
-                                        ws_stream.send(Message::Text(text?.into())).await?;
-                                    }
-                                }
-                                ResponseKind::Audio => {
-                                    let mut audio_stream =
-                                        self.synthesizer.synthesize(output_stream).await?;
-                                    info!("Sending audio");
-                                    let mut audio_buffer = BytesMut::new();
-                                    while let Some(audio) = audio_stream.next().await {
-                                        audio_buffer.extend_from_slice(&audio?);
-                                    }
-                                    ws_stream.send(Message::Binary(audio_buffer.into())).await?;
-                                    info!("Audio sent");
+                        let audio = self.recorder.stop().await?;
+                        recording_active = false;
+                        info!("Recording stopped");
+                        let transcription = self.transcriber.transcribe(&audio).await?;
+                        info!("Transcribed text: {:?}", &transcription);
+                        let action = self.parser.parse(&transcription).await?;
+                        info!("Action to perform: {:?}", &action);
+                        let mut output_stream = self.runtime.run(action).await?;
+                        info!("Runtime finished");
+                        match &self.response_kind {
+                            ResponseKind::Text => {
+                                while let Some(text) = output_stream.next().await {
+                                    info!("Sending {:?}", text);
+                                    ws_stream.send(Message::Text(text?.into())).await?;
                                 }
                             }
-                        } else {
-                            ws_stream.send("No recording in progress.".into()).await?;
+                            ResponseKind::Audio => {
+                                let mut audio_stream =
+                                    self.synthesizer.synthesize(output_stream).await?;
+                                info!("Sending audio");
+                                let mut audio_buffer = BytesMut::new();
+                                while let Some(audio) = audio_stream.next().await {
+                                    audio_buffer.extend_from_slice(&audio?);
+                                }
+                                ws_stream.send(Message::Binary(audio_buffer.into())).await?;
+                                info!("Audio sent");
+                            }
                         }
                     }
                     Command::Cancel => {
