@@ -69,7 +69,7 @@ impl RuntimeService for LocalRuntime {
                 response
             }
             IntentKind::DecreaseVolume => {
-                let value = action.entities.iter().find(|e| e.entity == "value");
+                let value = action.entities.iter().find(|e| e.entity == "NUMBER");
 
                 if let Some(value) = value {
                     if let EntityValue::Index(index) = value.value {
@@ -83,7 +83,7 @@ impl RuntimeService for LocalRuntime {
                 }
             }
             IntentKind::IncreaseVolume => {
-                let value = action.entities.iter().find(|e| e.entity == "value");
+                let value = action.entities.iter().find(|e| e.entity == "NUMBER");
 
                 if let Some(value) = value {
                     if let EntityValue::Index(index) = value.value {
@@ -97,7 +97,7 @@ impl RuntimeService for LocalRuntime {
                 }
             }
             IntentKind::SetVolume => {
-                let value = action.entities.iter().find(|e| e.entity == "value");
+                let value = action.entities.iter().find(|e| e.entity == "NUMBER");
 
                 if let Some(value) = value {
                     if let EntityValue::Index(index) = value.value {
