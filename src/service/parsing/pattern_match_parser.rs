@@ -125,6 +125,51 @@ impl ParsingService for PatternMatchParser {
                     ))
                 }
             }
+            x if x.contains("volume") && x.contains("increase") => {
+                if let Some(index) = Self::get_closest_number(x, "volume") {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::IncreaseVolume, None),
+                        vec![Entity::new("NUMBER", EntityValue::Index(index), None)],
+                        input.to_string(),
+                    ))
+                } else {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::LlmQuery, None),
+                        Vec::new(),
+                        input.to_string(),
+                    ))
+                }
+            }
+            x if x.contains("volume") && x.contains("decrease") => {
+                if let Some(index) = Self::get_closest_number(x, "volume") {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::DecreaseVolume, None),
+                        vec![Entity::new("NUMBER", EntityValue::Index(index), None)],
+                        input.to_string(),
+                    ))
+                } else {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::LlmQuery, None),
+                        Vec::new(),
+                        input.to_string(),
+                    ))
+                }
+            }
+            x if x.contains("volume") && x.contains("set") => {
+                if let Some(index) = Self::get_closest_number(x, "volume") {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::SetVolume, None),
+                        vec![Entity::new("NUMBER", EntityValue::Index(index), None)],
+                        input.to_string(),
+                    ))
+                } else {
+                    Ok(Action::new(
+                        Intent::new(IntentKind::LlmQuery, None),
+                        Vec::new(),
+                        input.to_string(),
+                    ))
+                }
+            }
             x if x.contains("weather") || x.contains("whether") => {
                 let location = Self::remove(
                     x.to_string(),
