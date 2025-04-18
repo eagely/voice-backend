@@ -2,3 +2,4 @@
 *.bin
 *.onnx
 *.onnx.json
+shell.nix

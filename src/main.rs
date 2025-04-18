@@ -44,8 +44,8 @@ async fn main() {
             }
         }
 
-        warn!("Attempting to restart server in 5 seconds...");
-        tokio::time::sleep(Duration::from_secs(5)).await;
+        warn!("Attempting to restart server in 1 second...");
+        tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }
 
