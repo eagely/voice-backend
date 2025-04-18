@@ -12,7 +12,7 @@ implementation = "deepseek"
 
 [parsing]
 rasa_base_url = "http://localhost:5005/"
-implementation = "rasa"
+implementation = "patternmatch"
 
 [recording]
 device_name = "pipewire"
