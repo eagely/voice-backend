@@ -3,7 +3,7 @@ use super::enums::{
     ResponseKind, SynthesisImplementation, TranscriptionImplementation, WeatherImplementation,
 };
 use crate::error::Result;
-use config::{Config, Environment, File};
+use config::{Config, File};
 use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::fs::{read_to_string, write};
@@ -120,10 +120,48 @@ impl AppConfig {
             builder = builder.add_source(File::from(config_path).required(false));
         }
 
-        builder = builder.add_source(Environment::with_prefix("APP").separator("_"));
-
         let config = builder.build()?;
         Ok(config.try_deserialize()?)
+    }
+
+    pub async fn get_all_config_entries() -> Result<Vec<String>> {
+        let mut builder = Config::builder().add_source(File::from_str(
+            include_str!("default.toml"),
+            config::FileFormat::Toml,
+        ));
+
+        if let Some(path) = Self::get_config_file() {
+            if !path.exists() {
+                Self::create_default_config_file(&path)?;
+            }
+            builder = builder.add_source(File::from(path).required(false));
+        }
+
+        let cfg = builder.build()?;
+        let toml_val: Value = cfg.try_deserialize()?;
+        let top = toml_val.as_table().ok_or_else(|| {
+            crate::error::Error::ConfigError(config::ConfigError::Message(
+                "invalid config structure".into(),
+            ))
+        })?;
+
+        let mut entries = Vec::new();
+        for (table_name, table_val) in top {
+            if let Value::Table(inner) = table_val {
+                for (key, val) in inner {
+                    let val_str = match val {
+                        Value::String(s) => s.clone(),
+                        Value::Integer(i) => i.to_string(),
+                        Value::Float(f) => f.to_string(),
+                        Value::Boolean(b) => b.to_string(),
+                        other => other.to_string(),
+                    };
+                    entries.push(format!("{}.{}={}", table_name, key, val_str));
+                }
+            }
+        }
+
+        Ok(entries)
     }
 
     pub async fn write_config(table: &str, key: &str, value: &str) -> Result<()> {
