@@ -5,7 +5,8 @@ pub enum Command {
     Cancel,
     StartRecording,
     StopRecording,
-    Config(String),
+    GetConfig,
+    SetConfig(String),
     Unknown(String),
 }
 
@@ -21,8 +22,9 @@ impl From<&str> for Command {
             "AC" => Self::Cancel,
             "AI" => Self::StartRecording,
             "AT" => Self::StopRecording,
-            x if x.starts_with('C') => Command::Config(x.strip_prefix('C').unwrap().to_owned()),
-            other => Command::Unknown(other.to_string()),
+            "G" => Self::GetConfig,
+            x if x.starts_with('C') => Self::SetConfig(x.strip_prefix('C').unwrap().to_owned()),
+            other => Self::Unknown(other.to_string()),
         }
     }
 }
@@ -33,7 +35,8 @@ impl From<Command> for String {
             Command::Cancel => "AC".to_string(),
             Command::StartRecording => "AI".to_string(),
             Command::StopRecording => "AT".to_string(),
-            Command::Config(s) => format!("C{}", s),
+            Command::GetConfig => "G".to_string(),
+            Command::SetConfig(s) => format!("C{}", s),
             Command::Unknown(s) => s,
         }
     }

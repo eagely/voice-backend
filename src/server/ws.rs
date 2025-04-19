@@ -44,6 +44,28 @@ impl WsServer {
         })
     }
 
+    async fn send_text(
+        &self,
+        ws_stream: &mut WebSocketStream<TcpStream>,
+        text: &str,
+    ) -> Result<()> {
+        ws_stream
+            .send(Message::Text(format!("T{}", text).into()))
+            .await?;
+        Ok(())
+    }
+
+    async fn send_config(
+        &self,
+        ws_stream: &mut WebSocketStream<TcpStream>,
+        entry: &str,
+    ) -> Result<()> {
+        ws_stream
+            .send(Message::Text(format!("C{}", entry).into()))
+            .await?;
+        Ok(())
+    }
+
     pub async fn listen(&self) -> Result<()> {
         let (stream, _addr) = self.listener.accept().await?;
         let ws_stream = accept_async(stream).await?;
@@ -57,8 +79,9 @@ impl WsServer {
         while let Some(msg) = ws_stream.next().await {
             let msg = msg?;
             if let Message::Text(line) = msg {
-                let l: Command = line.as_str().into();
-                match l {
+                let cmd: Command = line.as_str().into();
+                info!("Received command from client: {:?}", &cmd);
+                match cmd {
                     Command::StartRecording => {
                         self.recorder.start().await?;
                         recording_active = true;
@@ -76,8 +99,9 @@ impl WsServer {
                         match &self.response_kind {
                             ResponseKind::Text => {
                                 while let Some(text) = output_stream.next().await {
-                                    info!("Sending {:?}", text);
-                                    ws_stream.send(Message::Text(text?.into())).await?;
+                                    let text = text?;
+                                    info!("Sending T{:?}", text);
+                                    self.send_text(&mut ws_stream, &format!("{}", text)).await?;
                                 }
                             }
                             ResponseKind::Audio => {
@@ -85,8 +109,8 @@ impl WsServer {
                                     self.synthesizer.synthesize(output_stream).await?;
                                 info!("Sending audio");
                                 let mut audio_buffer = BytesMut::new();
-                                while let Some(audio) = audio_stream.next().await {
-                                    audio_buffer.extend_from_slice(&audio?);
+                                while let Some(chunk) = audio_stream.next().await {
+                                    audio_buffer.extend_from_slice(&chunk?);
                                 }
                                 ws_stream.send(Message::Binary(audio_buffer.into())).await?;
                                 info!("Audio sent");
@@ -97,45 +121,54 @@ impl WsServer {
                         if recording_active {
                             let _ = self.recorder.stop().await?;
                             recording_active = false;
-                            ws_stream.send("Recording canceled.".into()).await?;
+                            self.send_text(&mut ws_stream, "Recording canceled.")
+                                .await?;
                         } else {
-                            ws_stream.send("Nothing to cancel.".into()).await?;
+                            self.send_text(&mut ws_stream, "Nothing to cancel.").await?;
                         }
                     }
-                    Command::Config(config_str) => {
+                    Command::GetConfig => {
+                        let entries = AppConfig::get_all_config_entries().await?;
+                        for entry in entries {
+                            self.send_config(&mut ws_stream, &entry).await?;
+                        }
+                    }
+                    Command::SetConfig(config_str) => {
                         if let Some((table_key, value)) = config_str.split_once('=') {
-                            let table_key = table_key.trim();
                             let value = value.trim();
-
                             if let Some((table, key)) = table_key.split_once('.') {
-                                match AppConfig::write_config(table.trim(), key.trim(), value).await
-                                {
+                                let table = table.trim();
+                                let key = key.trim();
+                                let value = value.trim();
+                                match AppConfig::write_config(table, key, value).await {
                                     Ok(_) => {
-                                        ws_stream.send("Configuration updated.".into()).await?;
+                                        info!("Set {}.{} to {}", table, key, value);
+                                        self.send_text(&mut ws_stream, "Configuration updated.")
+                                            .await?;
+                                        self.send_config(&mut ws_stream, format!("{}.{}={}", table, key, value).as_str()).await?;
                                     }
                                     Err(e) => {
-                                        ws_stream
-                                            .send(
-                                                format!("Error updating configuration: {}", e)
-                                                    .into(),
-                                            )
-                                            .await?;
+                                        self.send_text(
+                                            &mut ws_stream,
+                                            &format!("Error updating configuration: {}", e),
+                                        )
+                                        .await?;
                                     }
                                 }
                             } else {
-                                ws_stream
-                                    .send("Invalid format. Use table.key = value.".into())
-                                    .await?;
+                                self.send_text(
+                                    &mut ws_stream,
+                                    "Invalid format. Use table.key=value.",
+                                )
+                                .await?;
                             }
                         } else {
-                            ws_stream
-                                .send("Invalid format. Use table.key = value.".into())
+                            self.send_text(&mut ws_stream, "Invalid format. Use table.key=value.")
                                 .await?;
                         }
                     }
                     Command::Unknown(command) => {
-                        ws_stream
-                            .send(format!("Unknown command: {}", command).into())
+                        self.send_text(&mut ws_stream, &format!("Unknown command: {}", command))
                             .await?;
                     }
                 }
