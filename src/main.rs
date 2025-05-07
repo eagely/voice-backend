@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 mod config;
 mod error;
 mod model;
