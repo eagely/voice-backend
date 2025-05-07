@@ -38,7 +38,7 @@ implementation = "deepgram"
 [synthesis]
 elevenlabs_base_url = "wss://api.elevenlabs.io/"
 elevenlabs_model_id = "eleven_multilingual_v2"
-elevenlabs_voice_id = "UgBBYS2sOqTuMpoF3BR0"
+elevenlabs_voice_id = "21m00Tcm4TlvDq8ikWAM"
 piper_base_url = "http://localhost:5000/"
 piper_voice = "en_US-ljspeech-high.onnx"
 implementation = "elevenlabs"

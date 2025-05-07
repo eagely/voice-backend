@@ -79,7 +79,12 @@ impl WsServer {
         while let Some(msg) = ws_stream.next().await {
             let msg = msg?;
             if let Message::Text(line) = msg {
-                let cmd: Command = line.as_str().into();
+                let mut cmd: Command = line.as_str().into();
+                if let Command::StartRecording = cmd {
+                    if recording_active {
+                        cmd = Command::StopRecording;
+                    }
+                }
                 info!("Received command from client: {:?}", &cmd);
                 match cmd {
                     Command::StartRecording => {
